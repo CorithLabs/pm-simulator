@@ -5,8 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="Zero Authority: a pixel-art product management RPG. All of the responsibility. None of the authority.">
 <meta name="theme-color" content="#0d1017">
-<meta property="og:title" content="Zero Authority">
-<meta property="og:description" content="A pixel-art product management RPG. All of the responsibility. None of the authority.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Zero Authority">
+<meta property="og:url" content="https://pm-simulator-game.vercel.app/">
+<meta property="og:title" content="Zero Authority: a product management RPG">
+<meta property="og:description" content="All of the responsibility. None of the authority. A pixel-art RPG where you take the VP's conference idea from pitch to postmortem. Free, in your browser.">
+<meta property="og:image" content="https://pm-simulator-game.vercel.app/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Zero Authority title over a pixel-art office full of engineers at their desks">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Zero Authority: a product management RPG">
+<meta name="twitter:description" content="All of the responsibility. None of the authority. Play free in your browser.">
+<meta name="twitter:image" content="https://pm-simulator-game.vercel.app/og.png">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%230d1017'/%3E%3Crect x='3' y='3' width='10' height='8' fill='%23cfc6a8'/%3E%3Crect x='4' y='4' width='8' height='6' fill='%230f2a1f'/%3E%3Crect x='5' y='5' width='2' height='2' fill='%23ffb547'/%3E%3Crect x='9' y='5' width='2' height='2' fill='%23ffb547'/%3E%3Crect x='6' y='8' width='4' height='1' fill='%23ffb547'/%3E%3Crect x='6' y='12' width='4' height='2' fill='%239a9384'/%3E%3C/svg%3E">
 <title>Zero Authority</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -180,7 +191,8 @@ canvas#game{display:block;width:100%;height:100%;image-rendering:pixelated;image
 .abtn{width:84px;height:84px;border-radius:50%;border-color:var(--amber);color:var(--amber);font-size:13px}
 @media (pointer:coarse),(max-width:700px){.pad{display:flex}.hint.keys{display:none}
   .stage .over{position:fixed;z-index:50}
-  .dlg{bottom:calc(8px - var(--padh));max-height:calc(100% + var(--padh) - 16px)}}
+  .dlg{bottom:calc(8px - var(--padh));min-height:calc(var(--padh) - 10px);max-height:calc(100% + var(--padh) - 16px)}
+  .stat b{letter-spacing:.02em}}
 @media (max-width:640px){.portrait{width:56px;height:56px}.hud{grid-template-columns:auto repeat(3,minmax(0,1fr))}.face{grid-row:span 2}.face{flex-direction:column;justify-content:center;gap:3px;padding:4px}.face canvas{width:48px;height:48px}.thought{font-size:15px;max-width:calc(100% - 196px)}.tog{padding:3px 5px;font-size:9px}.dlg{padding:10px;gap:8px}.portrait{width:48px;height:48px}.say{font-size:20px}.obj{display:none}}
 @media (prefers-reduced-motion:reduce){.ticker .run span{animation:none;position:static;display:block;padding:4px 0}}
 </style>

@@ -8,6 +8,8 @@ Take that idea from pitch to postmortem without losing your team, your exec, or 
 
 **[Play it in your browser →](https://pm-simulator-game.vercel.app/)**
 
+![The Engineering Pit in Zero Authority](screenshots/office.png)
+
 ## The campaign
 
 Six chapters. Your choices carry forward, and the game remembers what you cut, promised and skipped.
@@ -28,6 +30,17 @@ Along the way:
 - **Your PM has a face** that reacts to how things are going, and thoughts you'll recognise.
 - **Your desk in the Engineering Pit** has Claudia, an AI assistant, plus Jira and the Release Train dashboard.
 - Several endings, a performance review, and eight lessons worth keeping.
+
+## Screenshots
+
+| | |
+|---|---|
+| ![Brad pitches his conference idea](screenshots/pitch.png) | ![Interviewing a customer during discovery](screenshots/discovery.png) |
+| **The Pitch.** Brad is back from Vegas, and the board deck already says "AI Copilot". | **Discovery.** Three questions per customer. Stories are evidence; compliments aren't. |
+| ![The scope board in Chapter 3](screenshots/scope.png) | ![Title screen](screenshots/title.png) |
+| **Engineering.** The scope board starts over capacity. Cut scope, not quality. | **Title screen.** |
+
+<p align="center"><img src="screenshots/phone.png" alt="Zero Authority on a phone" width="300"><br><em>On a phone, with on-screen controls.</em></p>
 
 ## Screen sizes
 
