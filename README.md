@@ -33,6 +33,10 @@ Along the way:
 
 The game scales to fit the window on phones, laptops and large monitors, so you never have to scroll. On touch devices it shows an on-screen D-pad and TALK button.
 
+## First time?
+
+New players get a one-minute orientation: walk, talk to someone, then a quick tour of the HUD, objectives, choices and your desk. You can skip it, and replay it any time from Claudia on your desk.
+
 ## Controls
 
 - **Move:** arrow keys or WASD (on-screen D-pad on phones)

@@ -136,6 +136,18 @@ canvas#game{display:block;width:100%;height:100%;image-rendering:pixelated;image
 @media (max-height:680px){#title .hint,#title .ticket{display:none}}
 .over{scrollbar-width:thin;scrollbar-color:var(--edge) transparent}
 .over::-webkit-scrollbar{width:8px}.over::-webkit-scrollbar-thumb{background:var(--edge)}
+#coach{position:fixed;inset:0;z-index:80;pointer-events:none}
+#coach.block{pointer-events:auto}
+#coach.full{background:rgba(8,10,15,.62)}
+#coachHole{position:fixed;border:2px solid var(--amber);border-radius:4px;pointer-events:none;transition:left .25s,top .25s,width .25s,height .25s;box-shadow:0 0 0 3px rgba(255,181,71,.25)}
+#coachHole.dim{box-shadow:0 0 0 3px rgba(255,181,71,.25),0 0 0 9999px rgba(8,10,15,.62)}
+#coachTip{position:fixed;pointer-events:auto;width:min(400px,calc(100vw - 24px));background:var(--panel);border:2px solid var(--amber);box-shadow:5px 5px 0 rgba(0,0,0,.5);padding:12px 14px;display:flex;flex-direction:column;gap:8px;font-size:19px;line-height:1.15}
+#coachTip h4{margin:0;font-family:var(--display);font-weight:400;font-size:12px;letter-spacing:.06em;color:var(--amber);display:flex;justify-content:space-between;gap:8px}
+#coachTip h4 span{color:var(--dim)}
+#coachTip p{margin:0}
+#coachTip .task{color:var(--good);font-family:var(--display);font-size:11px;letter-spacing:.04em}
+#coachTip .btns{gap:8px}
+#coachTip .big{font-size:12px;padding:8px 12px}
 .card .create{display:grid;gap:calc(12px*var(--cfs));grid-template-areas:"name" "av" "skin" "hint" "btns"}
 @media (min-width:900px){.card.wide{max-width:calc(860px*var(--cfs))}.card .create{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"name av" "skin av" "hint av" "btns av";align-items:start}}
 .av[aria-pressed="true"]{border-color:var(--amber);color:var(--amber);background:var(--panel-2)}
@@ -262,6 +274,7 @@ canvas#game{display:block;width:100%;height:100%;image-rendering:pixelated;image
     <button type="button" class="abtn" id="abtn">TALK</button>
   </div>
 
+  <div id="coach" hidden><div id="coachHole"></div><div id="coachTip" role="dialog" aria-live="polite"></div></div>
   <div class="ticker" aria-live="off"><div class="tag">LIVE</div><div class="run"><span id="tick"></span></div></div>
 </div>
 
@@ -2010,6 +2023,76 @@ function letGo(){
   clearSave();
   showCard({kicker:'Campaign over · PIP outcome',title:'LET GO',body:`<p>HR's calendar invite was titled 'Quick sync'. Kevin was, somehow, there. Your badge stops working at 5 p.m. Brad posts on LinkedIn about 'the importance of the right fit'.</p><div class="lesson"><p>Exec trust isn't approval. It's the budget that lets you make decisions at all. You can spend it on the right fights, and you should. You can't let it run out.</p><p>The quickest ways back up: crisp updates, no surprises, and giving your exec a win they can present.</p></div><p class="hint">Your progress was reset. Start a new campaign to try again.</p>`,btn:'BACK TO TITLE',onBtn:()=>{over=true;$('title').hidden=false;started=false;refreshTitle()}});
 }
+/* ---------- ONBOARDING ---------- */
+const OB_KEY='za-onboarded-v1';
+function onboarded(){try{return localStorage.getItem(OB_KEY)==='1'}catch(_){return false}}
+function setOnboarded(){try{localStorage.setItem(OB_KEY,'1')}catch(_){}}
+const isTouch=()=>getComputedStyle($('pad')).display!=='none';
+let COACH=null;
+function obSteps(){
+  const n=pmName(),touch=isTouch(),stat=id=>()=>$(id).parentElement;
+  return [
+    {id:'hi',title:'Orientation',text:`Welcome to Shiftwise, ${n}. HR says orientation takes five minutes. It takes about a minute. HR has never timed it.`,btn:'Start orientation',skip:'Skip, I’ve done this before'},
+    {id:'walk',task:true,target:()=>touch?$('pad'):$('stage'),title:'Walk around',text:touch?'Use the D-pad to walk. Take a few steps.':'Use the arrow keys or WASD to walk. Take a few steps.',goal:'Walk 4 steps',done:()=>COACH.steps>=4},
+    {id:'talk',task:true,target:()=>touch?$('abtn'):$('stage'),title:'Talk to people',text:`See the bouncing arrow? That’s the Intern, just down and to your right. Walk next to them, face them, and ${touch?'tap TALK':'press E or Space'}.`,goal:'Talk to the Intern',done:()=>COACH.talked},
+    {id:'choose',title:'Making choices',text:`In conversations, ${touch?'tap':'click or press 1–6 to pick'} a choice. Choices that cost time show the days on the right. Some are marked ⇄ two-way door (easy to undo) or → one-way door (can’t be undone, so you’ll be asked to confirm).`},
+    {id:'face',target:()=>$('face').parentElement,title:'This is you',text:'Your face shows how you’re doing: confident, anxious, tired, overwhelmed. Your thoughts pop up just above it, and sometimes they’re hints.'},
+    {id:'days',target:stat('hDays'),title:'Days',text:'Most conversations and actions cost time. When the days run out, the chapter ends, ready or not.'},
+    {id:'trust',target:stat('hTrust'),title:'Exec trust',text:'How much Brad, your VP, believes in you. Too low and decisions get made in meetings you’re not invited to.'},
+    {id:'morale',target:stat('hMorale'),title:'Team morale',text:'Your team’s energy. Too low and they slow down, stop warning you about problems, and eventually quit.'},
+    {id:'sanity',target:stat('hSanity'),title:'Sanity',text:'Yours. Coffee and the beanbag help. Kevin from Ops does not. Hit zero and you’re out.'},
+    {id:'obj',target:()=>$('objBtn'),title:'Objectives',text:`Your next goal is always shown in the top right of the office. ${touch?'Tap':'Click'} here for the full list and your notebook. Markers over heads help too: “!” means they need you, “?” means optional.`},
+    {id:'desk',at:'bottom',target:()=>$('stage'),title:'Your desk',text:'Your desk is in the top-left corner of the Engineering Pit. The laptop has Claudia, your AI assistant, plus Jira and the Release Train. Stuck? Ask Claudia what to do next.'},
+    {id:'bye',title:'That’s orientation',text:S.ch===1?`Everything you do carries forward, and each chapter ends with a retro. Brad is waiting in the Executive Suite, top left. Good luck, ${n}.`:`Back to work, ${n}.`,btn:'Clock in for real'}
+  ];
+}
+function startOnboarding(after){
+  COACH={i:0,steps:0,talked:false,after,list:obSteps()};
+  const k=byId('kevin');if(k)k.cool=1e9;
+  held.length=0;$('coach').hidden=false;showCoach();
+}
+function endOnboarding(){
+  if(!COACH)return;const after=COACH.after;COACH=null;setOnboarded();
+  $('coach').hidden=true;const k=byId('kevin');if(k)k.cool=600;
+  if(after)after();
+}
+function coachNext(){if(!COACH)return;play('select');COACH.i++;if(COACH.i>=COACH.list.length)return endOnboarding();COACH.steps=0;showCoach()}
+function showCoach(){
+  const st=COACH.list[COACH.i];COACH.block=!st.task;
+  const c=$('coach'),tip=$('coachTip');
+  c.className=(COACH.block?'block':'')+(!st.target&&!st.task?' full':'');
+  const total=COACH.list.length;
+  tip.innerHTML=`<h4>${esc(st.title)}<span>${COACH.i+1}/${total}</span></h4><p>${esc(st.text)}</p>`+(st.task?`<div class="task">▸ ${esc(st.goal)}</div>`:'')+
+    `<div class="btns">${st.task?'':`<button class="big" type="button" id="cNext">${esc(st.btn||'Next')}</button>`}<button class="big alt" type="button" id="cSkip">${esc(st.skip||'Skip tour')}</button></div>`;
+  const nx=$('cNext');if(nx)nx.onclick=coachNext;
+  $('cSkip').onclick=()=>{play('select');endOnboarding()};
+  placeCoach();
+  if(nx)setTimeout(()=>{try{nx.focus({preventScroll:true})}catch(_){}},30);
+}
+function placeCoach(){
+  if(!COACH)return;
+  const st=COACH.list[COACH.i],hole=$('coachHole'),tip=$('coachTip');
+  const el=st.target&&st.target();
+  const vw=innerWidth,vh=innerHeight,tw=tip.offsetWidth,th=tip.offsetHeight;
+  if(!el){hole.style.display='none';tip.style.left=Math.max(12,(vw-tw)/2)+'px';tip.style.top=Math.max(12,(vh-th)/2)+'px';return}
+  const r=el.getBoundingClientRect(),pad=4;
+  hole.style.display='block';hole.className=COACH.block?'dim':'';
+  Object.assign(hole.style,{left:(r.left-pad)+'px',top:(r.top-pad)+'px',width:(r.width+pad*2)+'px',height:(r.height+pad*2)+'px'});
+  let x,y;
+  if(st.at==='bottom'){x=r.left+(r.width-tw)/2;y=r.bottom-th-14}
+  else if(st.task||r.height>vh*.45){x=r.left+12;y=r.top+12;if(isTouch()&&st.task&&el.id!=='stage'){y=Math.max(12,r.top-th-14)}}
+  else{x=r.left;y=r.bottom+12;if(y+th>vh-12)y=r.top-th-12}
+  x=Math.max(12,Math.min(vw-tw-12,x));y=Math.max(12,Math.min(vh-th-12,y));
+  tip.style.left=x+'px';tip.style.top=y+'px';
+}
+function coachTick(){
+  if(!COACH)return;
+  const st=COACH.list[COACH.i];
+  if(st.task&&!st.passed&&st.done()){st.passed=true;play('up');toast('NICE');}
+  if(st.task&&st.passed&&!dlg){coachNext()}
+  if(frame%6===0)placeCoach();
+}
+addEventListener('resize',()=>setTimeout(placeCoach,80));
 /* ---------- DISPATCH ---------- */
 const DEF={
   legal:[,,,"I hear there's a scheduling engine from 2016. I've prepared a cease-and-desist in case it becomes sentient.","Marketing sent me a headline. I replied with fourteen pages. They replied with a GIF."],
@@ -2045,6 +2128,7 @@ function crowdLine(n){
   return pool[n.lineI%pool.length];
 }
 function talkTo(n){
+  if(COACH&&n.id==='intern')COACH.talked=true;
   if(n.crowd) return say(n,crowdLine(n));
   if(n.id==='tyler') return TALK.tyler(n);
   if(S.ch===6&&!C6[n.id]&&DEF6[n.id]) return say(n,DEF6[n.id]);
@@ -2109,7 +2193,7 @@ function terminal(intro){
     ?`HELLO, ${pmName().toUpperCase()}. I AM CLAUDIA, YOUR AI ASSISTANT. I LIVE ON THE LAPTOP AT YOUR DESK, TOP LEFT OF THE ENGINEERING PIT. THE VP`+" OF PRODUCT HAS RETURNED FROM A CONFERENCE. HE IS IN THE EXECUTIVE SUITE, TOP LEFT. YOU HAVE 3 DAYS TO PREPARE CUSTOMER DISCOVERY. I HAVE GENERATED 9,000 USER STORIES TO HELP. ALL OF THEM SAY 'AS A USER, I WANT AI'."
     :`DISCOVERY WEEK. ${S.room.length} CUSTOMERS ARE WAITING IN RECEPTION. CHIP IS IN THE EXECUTIVE SUITE. YOU HAVE ${S.days} DAYS. EACH INTERVIEW TAKES ONE.${S.legal==='refused'||!S.legal?' NOTE: NO CONSENT FORM. 2 DAYS LOST WAITING ON LEGAL.':''}`)
     :["CLAUDIA HERE. HOW MAY I DEPRIORITIZE YOU TODAY?","CLAUDIA HERE. I'M NOT SAYING NO. I'M SAYING 'NOT THIS QUARTER'.","CLAUDIA HERE. I HAVE 9,000 TICKETS AND NO ISSUES. WAIT. REVERSE THAT.","CLAUDIA HERE. I CONTAIN MULTITUDES. MOSTLY P3S."][(S.tipI+S.ch)%4];
-  openDlg({who:TERMINAL,text,choices:[{t:'What should I do next?',act:()=>openDlg({who:TERMINAL,text:claudiaNext(),choices:[{t:'Back',act:()=>terminal(false)},{t:'Log off',act:closeDlg}]})},{t:'How am I doing?',act:()=>openDlg({who:TERMINAL,text:claudiaStatus(),choices:[{t:'Team & exec actions',act:actionsMenu},{t:'Back',act:()=>terminal(false)}]})},{t:'Tell me a Jira joke',act:()=>openDlg({who:TERMINAL,text:JIRA_JOKES[(S.jokeI=(S.jokeI||0)+1)%JIRA_JOKES.length],choices:[{t:'Another one',act:()=>openDlg({who:TERMINAL,text:JIRA_JOKES[(S.jokeI=(S.jokeI||0)+1)%JIRA_JOKES.length],choices:[{t:'Back',act:()=>terminal(false)}]})},{t:'Back',act:()=>terminal(false)}]})},{t:'Any advice?',act:()=>openDlg({who:TERMINAL,text:tips[S.tipI++%tips.length],choices:[{t:'Another tip',act:()=>openDlg({who:TERMINAL,text:tips[S.tipI++%tips.length]})},{t:'Log off',act:closeDlg}]})},{t:'Log off',act:closeDlg}]});
+  openDlg({who:TERMINAL,text,choices:[{t:'What should I do next?',act:()=>openDlg({who:TERMINAL,text:claudiaNext(),choices:[{t:'Back',act:()=>terminal(false)},{t:'Log off',act:closeDlg}]})},{t:'How am I doing?',act:()=>openDlg({who:TERMINAL,text:claudiaStatus(),choices:[{t:'Team & exec actions',act:actionsMenu},{t:'Back',act:()=>terminal(false)}]})},{t:'Replay orientation',act:()=>{closeDlg();startOnboarding(null)}},{t:'Tell me a Jira joke',act:()=>openDlg({who:TERMINAL,text:JIRA_JOKES[(S.jokeI=(S.jokeI||0)+1)%JIRA_JOKES.length],choices:[{t:'Another one',act:()=>openDlg({who:TERMINAL,text:JIRA_JOKES[(S.jokeI=(S.jokeI||0)+1)%JIRA_JOKES.length],choices:[{t:'Back',act:()=>terminal(false)}]})},{t:'Back',act:()=>terminal(false)}]})},{t:'Any advice?',act:()=>openDlg({who:TERMINAL,text:tips[S.tipI++%tips.length],choices:[{t:'Another tip',act:()=>openDlg({who:TERMINAL,text:tips[S.tipI++%tips.length]})},{t:'Log off',act:closeDlg}]})},{t:'Log off',act:closeDlg}]});
 }
 const JIRA_JOKES=[
   "WHY DID THE PM BREAK UP WITH JIRA? TOO MANY UNRESOLVED ISSUES.",
@@ -2264,7 +2348,9 @@ function startChapter(ch){
     5:{kicker:'Chapter 5 of 6 · Ship happens',title:'SHIP',body:"<p>Launch week. Agree a rollout, get Legal's sign-off, pick the one metric that would tell you if you were wrong, then board the Release Train.</p><p>What you cut, promised and skipped in earlier chapters is about to matter. Four days.</p>",btn:'BEGIN'}
   };
   setTrack(ch===6?7:ch);
-  showCard(Object.assign(cards[ch],{onBtn:()=>{started=true;hud();play('terminal');terminal(true)}}));
+  showCard(Object.assign(cards[ch],{onBtn:()=>{started=true;hud();
+    const intro=()=>{play('terminal');terminal(true)};
+    if(ch===1&&!onboarded()) startOnboarding(intro); else intro();}}));
 }
 function retroHtml(happened,lessons,review){
   return `<h3>What happened</h3><ul>${happened.map(h=>`<li>${h}</li>`).join('')}</ul>
@@ -2363,6 +2449,11 @@ function newCampaign(){
 const held=[];
 const KEYMAP={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',w:'up',s:'down',a:'left',d:'right',W:'up',S:'down',A:'left',D:'right'};
 addEventListener('keydown',e=>{
+  if(COACH&&COACH.block){if(e.target&&e.target.id==='pmName')return;
+    if(e.key==='Enter'||e.key===' '||e.key==='ArrowRight'){e.preventDefault();if(e.target&&e.target.id==='cSkip')return;coachNext()}
+    else if(e.key==='Escape'){e.preventDefault();endOnboarding()}
+    else if(KEYMAP[e.key]||/^[1-6eE]$/.test(e.key))e.preventDefault();
+    return}
   if(!started||over) return;
   const d=KEYMAP[e.key];
   if(d){e.preventDefault();if(dlg)return;if(!held.includes(d))held.push(d);return}
@@ -2378,12 +2469,12 @@ addEventListener('keyup',e=>{const d=KEYMAP[e.key];if(d){const i=held.indexOf(d)
 addEventListener('blur',()=>held.length=0);
 document.querySelectorAll('.dpad button').forEach(b=>{
   const d=b.dataset.d;
-  const on=e=>{e.preventDefault();if(dlg||!started||over)return;if(!held.includes(d))held.push(d);b.classList.add('on');try{b.setPointerCapture(e.pointerId)}catch(_){}};
+  const on=e=>{e.preventDefault();if(dlg||!started||over||(COACH&&COACH.block))return;if(!held.includes(d))held.push(d);b.classList.add('on');try{b.setPointerCapture(e.pointerId)}catch(_){}};
   const off=()=>{const i=held.indexOf(d);if(i>=0)held.splice(i,1);b.classList.remove('on')};
   b.addEventListener('pointerdown',on);['pointerup','pointercancel','lostpointercapture'].forEach(ev=>b.addEventListener(ev,off));
   b.addEventListener('contextmenu',e=>e.preventDefault());
 });
-$('abtn').addEventListener('click',()=>{if(started&&!over)action()});
+$('abtn').addEventListener('click',()=>{if(started&&!over&&!(COACH&&COACH.block))action()});
 $('say').addEventListener('click',()=>{if(typing&&dlg)dlg.finish()});
 $('objBtn').addEventListener('click',()=>{if(started&&!over&&!dlg)showObjectives()});
 
@@ -2410,8 +2501,9 @@ function update(){
   frame++;
   faceTick();
   ambTick();
+  coachTick();
   if(!started||over) return;
-  if(!dlg){
+  if(!dlg&&!(COACH&&COACH.block)){
     if(!player.moving){
       const d=held[held.length-1];
       if(d){player.dir=d;const [dx,dy]=DIRS[d];const nx=player.x+dx,ny=player.y+dy;
@@ -2421,7 +2513,7 @@ function update(){
     if(player.moving){
       player.prog+=2;const p=player.prog/T;
       player.px=(player.x+(player.tx-player.x)*p)*T;player.py=(player.y+(player.ty-player.y)*p)*T;
-      if(player.prog>=T){player.x=player.tx;player.y=player.ty;player.px=player.x*T;player.py=player.y*T;player.moving=false;play('step',(player.x+player.y)%2);
+      if(player.prog>=T){player.x=player.tx;player.y=player.ty;player.px=player.x*T;player.py=player.y*T;player.moving=false;play('step',(player.x+player.y)%2);if(COACH)COACH.steps++;
         const rm=roomAt(player.x,player.y);if(rm!==lastRoom){lastRoom=rm;$('loc').textContent=ROOM_NAMES[rm];roomThought(rm)}}
     }
   }
@@ -2443,7 +2535,7 @@ function update(){
       if(k.prog>=T){k.x=k.tx;k.px=k.x*T;k.moving=false}}
     k.py=k.y*T;
     const dist=Math.abs(k.x-player.x)+Math.abs(k.y-player.y);
-    if(k.cool<=0&&dist<=1&&!player.moving&&!k.moving){k.cool=60*25;k.wait=120;player.dir=k.x>player.x?'right':k.x<player.x?'left':k.y>player.y?'down':'up';held.length=0;TALK.kevin(k)}
+    if(!COACH&&k.cool<=0&&dist<=1&&!player.moving&&!k.moving){k.cool=60*25;k.wait=120;player.dir=k.x>player.x?'right':k.x<player.x?'left':k.y>player.y?'down':'up';held.length=0;TALK.kevin(k)}
   }
   const ty=byId('tyler');
   if(ty&&visible(ty)&&!dlg){
@@ -2547,7 +2639,8 @@ function skyFor(h){return h<15?['#8fc4e8','#b9dcf0']:h<18.5?['#e0885a','#7a4a8a'
 let lastLoc='';
 function render(){
   const camAxis=(p,map,view)=>map<=view?(map-view)/2:Math.max(0,Math.min(map-view,p-view/2));
-  const tx=camAxis(player.px+8,MW*T,VPW),ty=camAxis(player.py+8,MH*T,VPH);
+  const deskFocus=COACH&&COACH.list[COACH.i].id==='desk';
+  const tx=camAxis(deskFocus?2*T:player.px+8,MW*T,VPW),ty=camAxis(deskFocus?14*T:player.py+8,MH*T,VPH);
   const reduceMo=matchMedia('(prefers-reduced-motion: reduce)').matches;
   if(!CAM.init||reduceMo||Math.abs(tx-CAM.x)>120||Math.abs(ty-CAM.y)>120){CAM.x=tx;CAM.y=ty;CAM.init=true}
   else{CAM.x+=(tx-CAM.x)*.16;CAM.y+=(ty-CAM.y)*.16}
@@ -2606,6 +2699,10 @@ function render(){
     else {ctx.fillStyle='#74d9a8';ctx.fillRect(x+6,y-4,1,1);ctx.fillRect(x+7,y-3,1,1);ctx.fillRect(x+8,y-4,1,1);ctx.fillRect(x+9,y-5,1,1);ctx.fillRect(x+10,y-6,1,1)}
   });
   if(started&&S&&((S.ch===6&&S.c6&&S.c6.idea&&!S.c6.bets.length)||(S.ch===5&&S.c5&&S.c5.rollout&&S.c5.legal&&S.c5.metric&&!S.c5.launched))){const x=1*T+8,y=13*T-10+bob;ctx.fillStyle='#0d1017';ctx.fillRect(x+6,y,5,8);ctx.fillStyle='#ffb547';ctx.fillRect(x+7,y+1,3,4);ctx.fillRect(x+7,y+6,3,1)}
+  if(COACH&&COACH.list[COACH.i].id==='desk'){const x=T+8,y=13*T-16+Math.round(Math.sin(frame/7)*2);
+    ctx.fillStyle='#0d1017';ctx.fillRect(x+4,y-1,9,7);ctx.fillStyle='#ffb547';ctx.fillRect(x+5,y,7,2);ctx.fillRect(x+6,y+2,5,1);ctx.fillRect(x+7,y+3,3,1);ctx.fillRect(x+8,y+4,1,1)}
+  if(COACH&&COACH.list[COACH.i].id==='talk'){const it=byId('intern');if(it){const x=Math.round(it.px),y=Math.round(it.py)-14+Math.round(Math.sin(frame/7)*2);
+    ctx.fillStyle='#0d1017';ctx.fillRect(x+4,y-1,9,7);ctx.fillStyle='#ffb547';ctx.fillRect(x+5,y,7,2);ctx.fillRect(x+6,y+2,5,1);ctx.fillRect(x+7,y+3,3,1);ctx.fillRect(x+8,y+4,1,1)}}
   if(started&&!over&&!dlg&&!player.moving){const tg=lookTarget();if(tg){const x=tg.x*T,y=tg.y*T-(tg.npc?13-seatOff(tg.npc):6)+bob;
     ctx.fillStyle='#ece6d6';ctx.fillRect(x+5,y-4,7,7);ctx.fillStyle='#0d1017';ctx.fillRect(x+6,y-3,5,5);ctx.fillStyle='#ece6d6';ctx.fillRect(x+8,y-2,1,3)}}
   ctx.restore();
@@ -2644,6 +2741,7 @@ function computeMood(){
 }
 function faceReact(type){FACE.react=type;FACE.reactUntil=frame+75}
 function think(text,{force=false,gap=600}={}){
+  if(COACH) return false;
   if(!started||over||dlg) return false;
   if(!force&&frame-FACE.lastThought<gap) return false;
   FACE.text=text;FACE.lastThought=frame;FACE.hideAt=frame+260;FACE.shown=true;
