@@ -71,10 +71,7 @@ Any static host works. On Vercel, import the repo with no framework and no build
 
 Saves live in each player's `localStorage`, keyed to the domain. If you change the shape of the saved campaign state, older saves may need handling.
 
-## Credits
-
-Made by [CorithLabs](https://github.com/CorithLabs).
-All characters and companies are fictional.
+## All characters and companies are fictional.
 
 ## License
 
