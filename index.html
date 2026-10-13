@@ -19,6 +19,8 @@
 <meta name="twitter:description" content="All of the responsibility. None of the authority. Play free in your browser.">
 <meta name="twitter:image" content="https://pm-simulator-game.vercel.app/og.png">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%230d1017'/%3E%3Crect x='3' y='3' width='10' height='8' fill='%23cfc6a8'/%3E%3Crect x='4' y='4' width='8' height='6' fill='%230f2a1f'/%3E%3Crect x='5' y='5' width='2' height='2' fill='%23ffb547'/%3E%3Crect x='9' y='5' width='2' height='2' fill='%23ffb547'/%3E%3Crect x='6' y='8' width='4' height='1' fill='%23ffb547'/%3E%3Crect x='6' y='12' width='4' height='2' fill='%239a9384'/%3E%3C/svg%3E">
+<script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments)};</script>
+<script defer src="/_vercel/insights/script.js"></script>
 <title>Zero Authority</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -488,6 +490,14 @@ $('ambTog').addEventListener('click',()=>{audioInit();setAmb(!SND.ambOn)});
 ['pointerdown','keydown'].forEach(ev=>addEventListener(ev,()=>audioInit(),{once:false,passive:true}));
 document.addEventListener('visibilitychange',()=>{if(!SND.ctx)return;if(document.hidden)SND.ctx.suspend().catch(()=>{});else SND.ctx.resume().catch(()=>{})});
 
+/* ---------- ANALYTICS ---------- */
+// Funnel markers sent as virtual page views (free on Vercel's Hobby plan). No-op where the analytics script isn't loaded.
+const sentPages=new Set();
+function vpage(path,once=false){
+  if(once&&sentPages.has(path))return;sentPages.add(path);
+  try{if(typeof window.va==='function')window.va('pageview',{route:path,path})}catch(_){}
+}
+const slug=t=>String(t).toLowerCase().replace(/&/g,'and').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
 /* ---------- FIT TO SCREEN ---------- */
 function applyView(w,h){
   w=Math.max(160,Math.round(w));h=Math.max(120,Math.round(h));
@@ -1959,6 +1969,7 @@ function finalEnding(){
   <div class="review"><span>Customer impact</span><span>${imp}/100</span><span>Exec trust</span><span>${S.trust}</span><span>Team morale</span><span>${S.morale}</span><span>Sanity</span><span>${S.sanity}</span><span>Reported honestly</span><span>${S.c5.honest?'Yes':'No'}</span><span>Next quarter's plan</span><span>${c6.bets?`${planLoad()}/${planCapNow()} pts`:'—'}</span></div>
   <p style="font-family:var(--display);font-size:13px;color:var(--good)">Final rating for ${esc(pmName())}: ${rating}</p>`;
   clearSave();
+  vpage('/play/ending/'+slug(title));vpage('/play/rating/'+slug(rating));
   showCard({kicker:`Campaign complete · ${pmName()}, Product Manager`,title,body,btn:'NEW CAMPAIGN',onBtn:()=>{over=true;$('title').hidden=false;started=false;refreshTitle()}});
 }
 
@@ -2035,6 +2046,7 @@ TALK.tyler=n=>{
   ]);
 };
 function letGo(){
+  vpage('/play/ending/let-go');
   clearSave();
   showCard({kicker:'Campaign over · PIP outcome',title:'LET GO',body:`<p>HR's calendar invite was titled 'Quick sync'. Kevin was, somehow, there. Your badge stops working at 5 p.m. Brad posts on LinkedIn about 'the importance of the right fit'.</p><div class="lesson"><p>Exec trust isn't approval. It's the budget that lets you make decisions at all. You can spend it on the right fights, and you should. You can't let it run out.</p><p>The quickest ways back up: crisp updates, no surprises, and giving your exec a win they can present.</p></div><p class="hint">Your progress was reset. Start a new campaign to try again.</p>`,btn:'BACK TO TITLE',onBtn:()=>{over=true;$('title').hidden=false;started=false;refreshTitle()}});
 }
@@ -2066,7 +2078,8 @@ function startOnboarding(after){
   const k=byId('kevin');if(k)k.cool=1e9;
   held.length=0;$('coach').hidden=false;showCoach();
 }
-function endOnboarding(){
+function endOnboarding(skipped){
+  if(COACH)vpage(skipped?'/play/onboarding-skipped':'/play/onboarding-done',true);
   if(!COACH)return;const after=COACH.after;COACH=null;setOnboarded();
   $('coach').hidden=true;const k=byId('kevin');if(k)k.cool=600;
   if(after)after();
@@ -2080,7 +2093,7 @@ function showCoach(){
   tip.innerHTML=`<h4>${esc(st.title)}<span>${COACH.i+1}/${total}</span></h4><p>${esc(st.text)}</p>`+(st.task?`<div class="task">▸ ${esc(st.goal)}</div>`:'')+
     `<div class="btns">${st.task?'':`<button class="big" type="button" id="cNext">${esc(st.btn||'Next')}</button>`}<button class="big alt" type="button" id="cSkip">${esc(st.skip||'Skip tour')}</button></div>`;
   const nx=$('cNext');if(nx)nx.onclick=coachNext;
-  $('cSkip').onclick=()=>{play('select');endOnboarding()};
+  $('cSkip').onclick=()=>{play('select');endOnboarding(true)};
   placeCoach();
   if(nx)setTimeout(()=>{try{nx.focus({preventScroll:true})}catch(_){}},30);
 }
@@ -2351,6 +2364,7 @@ function showCard({kicker,title,body,btn,onBtn}){
   $('card').hidden=false;$('card').scrollTop=0;$('cBtn').focus({preventScroll:true});hud();
 }
 function startChapter(ch){
+  vpage('/play/chapter-'+ch,true);
   if(S.pip&&ch>S.pip.ch+1){if(S.trust<30) return letGo();S.pip=null;S.pipCleared=true;setTimeout(()=>toast('PIP CLEARED'),900)}
   resetFace();
   S.ch=ch;npcs.forEach(n=>{if(!n.cust)n.done=false});
@@ -2426,6 +2440,7 @@ function checkState(){
   if(over||dlg||!started) return;
   if(checkThresholds()) return;
   if(S.sanity<=0){
+    vpage('/play/ending/out-of-office');
     return showCard({kicker:'Campaign over',title:'OUT OF OFFICE',body:"<p>Your calendar now shows a recurring block called 'Focus Time', every day, all day, forever. You're in a cabin. There's no Wi-Fi. You've never been happier.</p><p class=\"hint\">Coffee, the beanbag and the intern restore sanity. Kevin does not.</p>",btn:'BACK TO TITLE',onBtn:()=>{over=true;$('title').hidden=false;started=false;refreshTitle()}});
   }
   if(S.ch===1&&S.days<=0&&!S.planDone){
@@ -2478,7 +2493,7 @@ const KEYMAP={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',
 addEventListener('keydown',e=>{
   if(COACH&&COACH.block){if(e.target&&e.target.id==='pmName')return;
     if(e.key==='Enter'||e.key===' '||e.key==='ArrowRight'){e.preventDefault();if(e.target&&e.target.id==='cSkip')return;coachNext()}
-    else if(e.key==='Escape'){e.preventDefault();endOnboarding()}
+    else if(e.key==='Escape'){e.preventDefault();endOnboarding(true)}
     else if(KEYMAP[e.key]||/^[1-6eE]$/.test(e.key))e.preventDefault();
     return}
   if(!started||over) return;
@@ -2839,13 +2854,14 @@ $('pmName').addEventListener('input',refreshCreate);
 $('pmName').addEventListener('keydown',e=>{e.stopPropagation();if(e.key==='Enter'){e.preventDefault();$('createGo').click()}});
 $('createBack').addEventListener('click',()=>{$('create').hidden=true;$('title').hidden=false});
 $('createGo').addEventListener('click',()=>{
+  vpage('/play/new-campaign');sentPages.forEach(x=>{if(x.startsWith('/play/chapter-'))sentPages.delete(x)});
   const nm=($('pmName').value||'').replace(/[<>]/g,'').trim().slice(0,16);
   AV.name=nm||'Alex';
   try{localStorage.setItem('rn-avatar',JSON.stringify(AV))}catch(_){}
   $('create').hidden=true;over=false;play('card');newCampaign();
 });
 $('startBtn').addEventListener('click',()=>{audioInit();openCreate()});
-$('contBtn').addEventListener('click',()=>{audioInit();const sv=loadSave();if(!sv)return;$('title').hidden=true;S=Object.assign(freshCampaign(),sv);npcs=npcList();placePlayer();started=false;dlg=null;$('dlg').hidden=true;startChapter(S.ch)});
+$('contBtn').addEventListener('click',()=>{audioInit();vpage('/play/continue');const sv=loadSave();if(!sv)return;$('title').hidden=true;S=Object.assign(freshCampaign(),sv);npcs=npcList();placePlayer();started=false;dlg=null;$('dlg').hidden=true;startChapter(S.ch)});
 refreshTitle();
 })();
 </script>

@@ -59,6 +59,10 @@ New players get a one-minute orientation: walk, talk to someone, then a quick to
 
 Progress saves in your browser at the start of each chapter.
 
+## Analytics
+
+The live site uses [Vercel Web Analytics](https://vercel.com/docs/analytics), which is cookieless and doesn't collect personal data. Besides normal page views, the game sends a few anonymous markers as virtual page views so we can see how far people get: `/play/new-campaign`, `/play/onboarding-done` or `-skipped`, `/play/chapter-1` to `/play/chapter-6`, `/play/continue`, and `/play/ending/<ending>` plus `/play/rating/<rating>`. Nothing is sent when you open the file locally.
+
 ## Run it locally
 
 It's a single HTML file with no build step and no dependencies. Open `index.html` in a browser.
