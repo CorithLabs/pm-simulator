@@ -73,8 +73,7 @@ Saves live in each player's `localStorage`, keyed to the domain. If you change t
 
 ## Credits
 
-Made by [CorithLabs](https://github.com/CorithLabs). Inspired by [Civic Nightmare](https://github.com/Daniele-Cangi/civic-nightmare).
-
+Made by [CorithLabs](https://github.com/CorithLabs).
 All characters and companies are fictional.
 
 ## License
