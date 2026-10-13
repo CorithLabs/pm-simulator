@@ -30,7 +30,7 @@ img{max-width:100%}
 }
 html,body{background:var(--void);color:var(--paper)}
 body{font-family:var(--body);font-size:20px;line-height:1.15;padding-inline:16px;padding-block:10px}
-:root{--fs:1;--hs:1;--padh:0px}
+:root{--fs:1;--cfs:1;--hs:1;--padh:0px}
 .cab{max-width:960px;margin:0 auto;display:flex;flex-direction:column;gap:8px}
 .top{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 16px}
 .brand{font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:.06em;color:var(--amber);margin:0}
@@ -114,27 +114,34 @@ canvas#game{display:block;width:100%;height:100%;image-rendering:pixelated;image
 
 /* Overlays */
 .over{position:absolute;inset:0;background:var(--veil);display:flex;align-items:flex-start;justify-content:center;padding:20px 16px;overflow:auto}
-.card{max-width:calc(600px*var(--fs));width:100%;display:flex;flex-direction:column;gap:12px;text-align:left;margin:auto 0}
-.card h1{font-family:var(--display);font-weight:700;font-size:calc(clamp(24px,6vw,42px)*var(--fs));line-height:1;color:var(--amber);margin:0;text-wrap:balance;letter-spacing:.02em}
-.card h2{font-family:var(--display);font-weight:400;font-size:calc(12px*var(--fs));letter-spacing:.1em;color:var(--dim);margin:0;text-transform:uppercase}
-.card h3{font-family:var(--display);font-weight:400;font-size:calc(12px*var(--fs));letter-spacing:.08em;color:var(--amber);margin:6px 0 0;text-transform:uppercase}
-.card .tagline{font-family:var(--display);font-size:calc(13px*var(--fs));color:var(--paper);letter-spacing:.04em;margin-top:-4px}
-.card p{margin:0;font-size:calc(21px*var(--fs));max-width:62ch}
-.card ul{margin:0;padding-left:20px;font-size:calc(20px*var(--fs));display:flex;flex-direction:column;gap:3px}
+.card{max-width:calc(600px*var(--cfs));width:100%;display:flex;flex-direction:column;gap:12px;text-align:left;margin:auto 0}
+.card h1{font-family:var(--display);font-weight:700;font-size:calc(clamp(24px,6vw,42px)*var(--cfs));line-height:1;color:var(--amber);margin:0;text-wrap:balance;letter-spacing:.02em}
+.card h2{font-family:var(--display);font-weight:400;font-size:calc(12px*var(--cfs));letter-spacing:.1em;color:var(--dim);margin:0;text-transform:uppercase}
+.card h3{font-family:var(--display);font-weight:400;font-size:calc(12px*var(--cfs));letter-spacing:.08em;color:var(--amber);margin:6px 0 0;text-transform:uppercase}
+.card .tagline{font-family:var(--display);font-size:calc(13px*var(--cfs));color:var(--paper);letter-spacing:.04em;margin-top:-4px}
+.card p{margin:0;font-size:calc(21px*var(--cfs));max-width:62ch}
+.card ul{margin:0;padding-left:20px;font-size:calc(20px*var(--cfs));display:flex;flex-direction:column;gap:3px}
 .lesson{border-left:3px solid var(--good);padding:6px 0 6px 12px;display:flex;flex-direction:column;gap:6px}
-.ticket{border:1px dashed var(--edge);padding:8px 10px;font-size:calc(19px*var(--fs));color:var(--dim)}
+.ticket{border:1px dashed var(--edge);padding:8px 10px;font-size:calc(19px*var(--cfs));color:var(--dim)}
 .ticket b{color:var(--paper);font-weight:400}
-.review{display:grid;grid-template-columns:1fr auto;gap:2px 16px;font-size:calc(20px*var(--fs));font-variant-numeric:tabular-nums;border-top:1px solid var(--edge);padding-top:8px}
+.review{display:grid;grid-template-columns:1fr auto;gap:2px 16px;font-size:calc(20px*var(--cfs));font-variant-numeric:tabular-nums;border-top:1px solid var(--edge);padding-top:8px}
 .review span:nth-child(even){text-align:right}
-.big{font-family:var(--display);font-size:calc(14px*var(--fs));background:var(--amber);color:#0d1017;border:0;padding:10px 16px;cursor:pointer;align-self:flex-start}
+.big{font-family:var(--display);font-size:calc(14px*var(--cfs));background:var(--amber);color:#0d1017;border:0;padding:10px 16px;cursor:pointer;align-self:flex-start}
 .big:hover{filter:brightness(1.1)}
 .create-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-.av{display:flex;flex-direction:column;align-items:center;gap:6px;background:var(--panel);border:2px solid var(--edge);color:var(--paper);padding:10px 6px;cursor:pointer;font-family:var(--display);font-size:11px;letter-spacing:.06em}
-.av canvas{width:96px;height:96px;image-rendering:pixelated}
+.av{display:flex;flex-direction:column;align-items:center;gap:6px;background:var(--panel);border:2px solid var(--edge);color:var(--paper);padding:8px 6px;cursor:pointer;font-family:var(--display);font-size:calc(11px*var(--cfs));letter-spacing:.04em;text-align:center}
+.av canvas{width:calc(80px*var(--cfs));height:calc(80px*var(--cfs));image-rendering:pixelated}
+.av b{color:var(--amber);font-weight:700}
+.av[aria-pressed="false"] b{color:var(--paper)}
+@media (max-height:680px){#title .hint,#title .ticket{display:none}}
+.over{scrollbar-width:thin;scrollbar-color:var(--edge) transparent}
+.over::-webkit-scrollbar{width:8px}.over::-webkit-scrollbar-thumb{background:var(--edge)}
+.card .create{display:grid;gap:calc(12px*var(--cfs));grid-template-areas:"name" "av" "skin" "hint" "btns"}
+@media (min-width:900px){.card.wide{max-width:calc(860px*var(--cfs))}.card .create{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"name av" "skin av" "hint av" "btns av";align-items:start}}
 .av[aria-pressed="true"]{border-color:var(--amber);color:var(--amber);background:var(--panel-2)}
 .field{display:flex;flex-direction:column;gap:4px}
 .field label{font-family:var(--display);font-size:11px;letter-spacing:.08em;color:var(--dim)}
-.field input{font-family:var(--body);font-size:24px;background:var(--panel);color:var(--paper);border:1px solid var(--edge);padding:6px 10px;max-width:320px}
+.field input{font-family:var(--body);font-size:calc(22px*var(--cfs));width:100%;background:var(--panel);color:var(--paper);border:1px solid var(--edge);padding:6px 10px;max-width:320px}
 .field input:focus-visible{outline:2px solid var(--amber);outline-offset:1px}
 .swatches{display:flex;gap:8px;flex-wrap:wrap}
 .sw{width:34px;height:34px;border:2px solid var(--edge);cursor:pointer;padding:0}
@@ -217,19 +224,21 @@ canvas#game{display:block;width:100%;height:100%;image-rendering:pixelated;image
     </div>
 
     <div class="over" id="create" hidden>
-      <div class="card">
+      <div class="card wide">
         <h2>New hire paperwork · Form PM-1</h2>
         <h1>WHO ARE YOU?</h1>
-        <div class="field"><label for="pmName">NAME</label><input id="pmName" type="text" maxlength="16" autocomplete="off" spellcheck="false" placeholder="Alex"></div>
-        <div class="field"><label>AVATAR</label>
-          <div class="create-grid">
-            <button type="button" class="av" id="avM" aria-pressed="true"><canvas id="cvM" width="24" height="24"></canvas>MALE</button>
-            <button type="button" class="av" id="avF" aria-pressed="false"><canvas id="cvF" width="24" height="24"></canvas>FEMALE</button>
+        <div class="create">
+          <div class="field" style="grid-area:name"><label for="pmName">NAME</label><input id="pmName" type="text" maxlength="16" autocomplete="off" spellcheck="false" placeholder="Alex"></div>
+          <div class="field" style="grid-area:av"><label>JOB TITLE</label>
+            <div class="create-grid">
+              <button type="button" class="av" id="avM" aria-pressed="true"><canvas id="cvM" width="24" height="24"></canvas><span>Product <b>MAN</b>ager</span></button>
+              <button type="button" class="av" id="avF" aria-pressed="false"><canvas id="cvF" width="24" height="24"></canvas><span>Product <b>WOMAN</b>ager</span></button>
+            </div>
           </div>
+          <div class="field" style="grid-area:skin"><label>SKIN TONE</label><div class="swatches" id="swatches"></div></div>
+          <p class="hint" id="createHint" style="grid-area:hint;margin:0">Your badge is printed. Your laptop is on backorder. Brad is already looking for you.</p>
+          <div class="btns" style="grid-area:btns"><button class="big" id="createGo" type="button">CLOCK IN</button><button class="big alt" id="createBack" type="button">BACK</button></div>
         </div>
-        <div class="field"><label>SKIN TONE</label><div class="swatches" id="swatches"></div></div>
-        <p class="hint" id="createHint">Your badge is printed. Your laptop is on backorder. Brad is already looking for you.</p>
-        <div class="btns"><button class="big" id="createGo" type="button">CLOCK IN</button><button class="big alt" id="createBack" type="button">BACK</button></div>
       </div>
     </div>
 
@@ -489,6 +498,8 @@ function layout(){
   stage.style.width=sw+'px';stage.style.height=sh+'px';
   if(padOn) cab.style.minHeight=Math.floor(WH-padY-2)+'px';
   document.documentElement.style.setProperty('--fs',(padOn?1:Math.max(1,Math.min(1.45,sh/620))).toFixed(3));
+  const ch=padOn?WH:sh;
+  document.documentElement.style.setProperty('--cfs',Math.max(.72,Math.min(1.45,ch/(padOn?860:640))).toFixed(3));
   document.documentElement.style.setProperty('--hs',Math.max(1,Math.min(1.25,availW/1100)).toFixed(3));
   stage.style.setProperty('--padh',(padOn?pad.offsetHeight+8:0)+'px');
 }
