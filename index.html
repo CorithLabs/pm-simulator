@@ -67,6 +67,7 @@ button.stat{font:inherit;color:inherit;text-align:left;cursor:pointer;border-col
 button.stat:hover{background:var(--panel-2)}
 button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
 .stage{position:relative;align-self:center;width:100%;aspect-ratio:320/208;max-width:100%}
+.stage[style*="height"]{aspect-ratio:auto}
 .screen{position:absolute;inset:0;border:2px solid var(--edge);background:#000;overflow:hidden}
 canvas#game{display:block;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges}
 .crt{position:absolute;inset:0;pointer-events:none;
@@ -82,7 +83,7 @@ canvas#game{display:block;width:100%;height:100%;image-rendering:pixelated;image
 @keyframes tick{from{transform:translateX(100vw)}to{transform:translateX(-100%)}}
 
 /* Dialogue */
-.dlg{position:absolute;left:8px;right:8px;bottom:8px;max-height:calc(100% - 16px);z-index:20;overflow:auto;background:var(--panel);border:2px solid var(--amber);box-shadow:inset 0 0 0 2px var(--void),inset 0 0 0 3px rgba(255,181,71,.3),0 0 0 3px var(--void),5px 5px 0 3px rgba(0,0,0,.45);padding:14px;display:flex;gap:12px;align-items:flex-start}
+.dlg{position:absolute;left:50%;translate:-50% 0;width:min(calc(100% - 16px),calc(1040px*var(--fs)));bottom:8px;max-height:calc(100% - 16px);z-index:20;overflow:auto;background:var(--panel);border:2px solid var(--amber);box-shadow:inset 0 0 0 2px var(--void),inset 0 0 0 3px rgba(255,181,71,.3),0 0 0 3px var(--void),5px 5px 0 3px rgba(0,0,0,.45);padding:14px;display:flex;gap:12px;align-items:flex-start}
 .portrait{flex:none;width:calc(72px*var(--fs));height:calc(72px*var(--fs));image-rendering:pixelated;background:var(--panel-2);border:2px solid var(--amber);box-shadow:0 0 0 2px var(--void)}
 .over:not([hidden]),.dlg:not([hidden]){animation:fadeIn .3s ease-out}
 @keyframes fadeIn{from{opacity:0}}
@@ -257,7 +258,8 @@ canvas#game{display:block;width:100%;height:100%;image-rendering:pixelated;image
 
 <script>
 (()=>{
-const T=16, MW=40, MH=26, VW=20, VH=13;
+const T=16, MW=40, MH=26;
+let VPW=320, VPH=208;
 const DIRS={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]};
 const $=id=>document.getElementById(id);
 
@@ -450,30 +452,44 @@ $('ambTog').addEventListener('click',()=>{audioInit();setAmb(!SND.ambOn)});
 document.addEventListener('visibilitychange',()=>{if(!SND.ctx)return;if(document.hidden)SND.ctx.suspend().catch(()=>{});else SND.ctx.resume().catch(()=>{})});
 
 /* ---------- FIT TO SCREEN ---------- */
+function applyView(w,h){
+  w=Math.max(160,Math.round(w));h=Math.max(120,Math.round(h));
+  if(w===VPW&&h===VPH)return;
+  VPW=w;VPH=h;
+  const c=$('game');c.width=w;c.height=h;
+  const x=c.getContext('2d');x.imageSmoothingEnabled=false;
+  if(typeof lightCv!=='undefined'){lightCv.width=w;lightCv.height=h}
+  if(typeof CAM!=='undefined')CAM.init=false;
+}
 function layout(){
   const cab=$('cab'),stage=$('stage'),pad=$('pad');
-  const vv=window.visualViewport;const VW=Math.floor(vv?vv.width:innerWidth),VH=Math.floor(vv?vv.height:innerHeight);
+  const vv=window.visualViewport;const WW=Math.floor(vv?vv.width:innerWidth),WH=Math.floor(vv?vv.height:innerHeight);
   const bs=getComputedStyle(document.body),rs=getComputedStyle(document.documentElement);
   const padX=parseFloat(bs.paddingLeft)+parseFloat(bs.paddingRight);
   const padY=parseFloat(bs.paddingTop)+parseFloat(bs.paddingBottom)+(parseFloat(rs.paddingTop)||0)+(parseFloat(rs.paddingBottom)||0);
-  const availW=Math.max(260,VW-padX);
+  const availW=Math.max(260,WW-padX);
   const padOn=getComputedStyle(pad).display!=='none';
-  cab.style.minHeight='';
-  const others=()=>{const gap=parseFloat(getComputedStyle(cab).rowGap)||0;let used=0;
-    for(const el of cab.children){if(el===stage||getComputedStyle(el).display==='none')continue;used+=el.offsetHeight+gap}
-    return used;};
-  const fitFor=cw=>{cab.style.maxWidth='none';cab.style.width=cw+'px';const availH=VH-padY-others()-6;return Math.max(160,Math.floor(Math.min(cw,availH*320/208)))};
-  let gw;
-  if(padOn){gw=fitFor(availW)}
-  else{
-    let cw=Math.min(availW,1800);gw=fitFor(cw);
-    cw=Math.min(availW,Math.max(gw,560));gw=fitFor(cw);
-    cw=Math.min(availW,Math.max(gw,560));gw=fitFor(cw);
+  cab.style.minHeight='';cab.style.maxWidth='none';cab.style.width=availW+'px';
+  const gap=parseFloat(getComputedStyle(cab).rowGap)||0;let used=0;
+  for(const el of cab.children){if(el===stage||getComputedStyle(el).display==='none')continue;used+=el.offsetHeight+gap}
+  const availH=Math.max(140,WH-padY-used-6);
+  let sw,sh;
+  if(padOn){
+    sw=Math.floor(Math.min(availW,availH*320/208));sh=Math.floor(sw*208/320);applyView(320,208);
+  } else {
+    // Desktop: fill the whole area, showing more of the office on bigger screens.
+    let tilesH=Math.max(13,Math.min(MH,availH/(T*3.4)));
+    let scale=availH/(tilesH*T);
+    let vw=availW/scale,vh=availH/scale;
+    if(vw>MW*T){scale=availW/(MW*T);vw=MW*T;vh=availH/scale}
+    if(vh>MH*T){vh=MH*T}
+    sw=availW;sh=Math.floor(Math.min(availH,vh*scale));
+    applyView(vw,vh*(sh/(vh*scale)));
   }
-  stage.style.width=gw+'px';
-  if(padOn) cab.style.minHeight=Math.floor(VH-padY-2)+'px';
-  document.documentElement.style.setProperty('--fs',Math.max(1,Math.min(1.45,gw/880)).toFixed(3));
-  document.documentElement.style.setProperty('--hs',Math.max(1,Math.min(1.25,parseFloat(cab.style.width)/1000)).toFixed(3));
+  stage.style.width=sw+'px';stage.style.height=sh+'px';
+  if(padOn) cab.style.minHeight=Math.floor(WH-padY-2)+'px';
+  document.documentElement.style.setProperty('--fs',(padOn?1:Math.max(1,Math.min(1.45,sh/620))).toFixed(3));
+  document.documentElement.style.setProperty('--hs',Math.max(1,Math.min(1.25,availW/1100)).toFixed(3));
   stage.style.setProperty('--padh',(padOn?pad.offsetHeight+8:0)+'px');
 }
 let layoutT;const relayout=()=>{clearTimeout(layoutT);layoutT=setTimeout(layout,60)};
@@ -2491,7 +2507,7 @@ const cv=$('game'),ctx=cv.getContext('2d');ctx.imageSmoothingEnabled=false;
 const seatOff=n=>n.seated&&'DT'.includes(tile(n.x,n.y+1))?7:0;
 /* ---------- LIGHT & TIME ---------- */
 const CAM={x:0,y:0,init:false};
-const lightCv=document.createElement('canvas');lightCv.width=VW*T;lightCv.height=VH*T;const lctx=lightCv.getContext('2d');
+const lightCv=document.createElement('canvas');lightCv.width=VPW;lightCv.height=VPH;const lctx=lightCv.getContext('2d');
 const LIGHTS=[];
 (()=>{
   [4,10,16,22,28,34].forEach((x,i)=>LIGHTS.push({x:x*T+8,y:10*T+4,r:44,k:'ceil',flick:i===3}));
@@ -2519,14 +2535,15 @@ function timeOfDay(){
 function skyFor(h){return h<15?['#8fc4e8','#b9dcf0']:h<18.5?['#e0885a','#7a4a8a']:['#0f1630','#1b2448']}
 let lastLoc='';
 function render(){
-  const tx=Math.max(0,Math.min(MW*T-VW*T,player.px+8-VW*T/2)),ty=Math.max(0,Math.min(MH*T-VH*T,player.py+8-VH*T/2));
+  const camAxis=(p,map,view)=>map<=view?(map-view)/2:Math.max(0,Math.min(map-view,p-view/2));
+  const tx=camAxis(player.px+8,MW*T,VPW),ty=camAxis(player.py+8,MH*T,VPH);
   const reduceMo=matchMedia('(prefers-reduced-motion: reduce)').matches;
   if(!CAM.init||reduceMo||Math.abs(tx-CAM.x)>120||Math.abs(ty-CAM.y)>120){CAM.x=tx;CAM.y=ty;CAM.init=true}
   else{CAM.x+=(tx-CAM.x)*.16;CAM.y+=(ty-CAM.y)*.16}
   const camX=Math.round(CAM.x),camY=Math.round(CAM.y);
   const TOD=timeOfDay();
   ctx.clearRect(0,0,cv.width,cv.height);
-  ctx.drawImage(mapCanvas,camX,camY,VW*T,VH*T,0,0,VW*T,VH*T);
+  ctx.fillStyle='#0d1017';ctx.fillRect(0,0,VPW,VPH);ctx.drawImage(mapCanvas,-camX,-camY);
   ctx.save();ctx.translate(-camX,-camY);
   for(let x=14;x<=25;x++)if(map[13][x]==='S')for(let i=0;i<4;i++){
     const on=((frame>>4)+x*3+i*7)%5!==0;ctx.fillStyle=on?(i%2?'#74d9a8':'#ffb547'):'#2a2f3a';ctx.fillRect(x*T+11,13*T+3+i*3,1,1);ctx.fillRect(x*T+4,13*T+3+i*3,2,1)}
@@ -2553,7 +2570,7 @@ function render(){
   ents.sort((a,b)=>a.py-b.py).forEach(e=>e.draw());
   // lighting overlay
   ctx.restore();ctx.save();
-  {const L=lctx,W=VW*T,H=VH*T;
+  {const L=lctx,W=VPW,H=VPH;
     L.globalCompositeOperation='source-over';L.clearRect(0,0,W,H);L.fillStyle=`rgba(${TOD.col},${TOD.a})`;L.fillRect(0,0,W,H);
     if(TOD.a>.12){L.globalCompositeOperation='destination-out';
       LIGHTS.forEach(l=>{if(l.k!=='ceil')return;const x=l.x-camX,y=l.y-camY;if(x<-l.r||y<-l.r||x>W+l.r||y>H+l.r)return;
