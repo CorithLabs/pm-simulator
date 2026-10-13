@@ -1,4 +1,6 @@
-# Roadmap Nightmare
+# Zero Authority
+
+*All of the responsibility. None of the authority.*
 
 A pixel-art RPG about product management. You're the new PM at Shiftwise, a shift-scheduling company. Your VP just got back from a conference with an idea, and it's already in the board deck.
 
@@ -26,6 +28,10 @@ Along the way:
 - **Your PM has a face** that reacts to how things are going, and thoughts you'll recognise.
 - **Your desk in the Engineering Pit** has Claudia, an AI assistant, plus Jira and the Release Train dashboard.
 - Several endings, a performance review, and eight lessons worth keeping.
+
+## Screen sizes
+
+The game scales to fit the window on phones, laptops and large monitors, so you never have to scroll. On touch devices it shows an on-screen D-pad and TALK button.
 
 ## Controls
 
