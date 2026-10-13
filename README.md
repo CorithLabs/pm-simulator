@@ -6,7 +6,7 @@ A pixel-art RPG about product management. You're the new PM at Shiftwise, a shif
 
 Take that idea from pitch to postmortem without losing your team, your exec, or your mind.
 
-**[Play it in your browser →](https://pm-simulator.vercel.app)** *(update this link once the Vercel deployment is live)*
+**[Play it in your browser →](https://pm-simulator-game.vercel.app/)**
 
 ## The campaign
 
