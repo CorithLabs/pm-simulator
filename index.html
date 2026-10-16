@@ -297,7 +297,7 @@ canvas#game{display:block;width:100%;height:100%;image-rendering:pixelated;image
 
 <script>
 (()=>{
-const T=16, MW=40, MH=26;
+const T=16, MW=40, MH=32;
 let VPW=320, VPH=208;
 const DIRS={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]};
 const $=id=>document.getElementById(id);
@@ -348,7 +348,12 @@ const SFX={
   launch:()=>{[523,659,784,1047,784,1047,1319].forEach((f,i)=>tone(f,.15,{vol:.12,delay:i*.09}));noise(.9,{vol:.06,hp:2500,delay:.3})},
   thought:()=>{tone(1200,.05,{vol:.05,type:'triangle'});tone(1600,.05,{vol:.04,type:'triangle',delay:.06})},
   terminal:()=>{[1000,1500,2000].forEach((f,i)=>tone(f,.035,{vol:.07,delay:i*.05}))},
-  sad:()=>[392,370,349,330].forEach((f,i)=>tone(f,.28,{vol:.11,delay:i*.26,type:'triangle'}))
+  sad:()=>[392,370,349,330].forEach((f,i)=>tone(f,.28,{vol:.11,delay:i*.26,type:'triangle'})),
+  heel:v=>{tone(1700+Math.random()*200,.022,{vol:.09*v,type:'square'});noise(.018,{vol:.08*v,hp:3800})},
+  clink:v=>{tone(3300,.09,{vol:.06*v,type:'sine'});tone(4200,.07,{vol:.05*v,type:'sine',delay:.1});tone(3700,.07,{vol:.045*v,type:'sine',delay:.21})},
+  invite:()=>{tone(1047,.1,{vol:.11,type:'triangle'});tone(1568,.22,{vol:.1,type:'triangle',delay:.1});tone(1319,.12,{vol:.06,type:'sine',delay:.32})},
+  poof:()=>{noise(.25,{vol:.12,hp:600});tone(300,.18,{vol:.08,slide:500,type:'triangle'})},
+  scream:()=>{tone(520,.5,{vol:.13,slide:240,type:'sawtooth'});tone(540,.45,{vol:.08,slide:200,type:'square',delay:.03});noise(.4,{vol:.05,hp:1500})}
 };
 /* ---------- OFFICE AMBIENCE ---------- */
 function ambInit(){
@@ -423,7 +428,9 @@ const AMB_SRC=[
   ['legal','paper',19,4,.12],['legal','stapler',15,1,.04],['legal','typing',20,4,.12],
   ['design','marker',30,1,.12],['design','murmur',33,5,.08],['design','click',34,4,.1],
   ['exec','tick',6,1,1],['exec','murmur',6,2,.03],
-  ['hall','coffee',13,9,.02],['hall','murmur',20,10,.05]
+  ['hall','coffee',13,9,.02],['hall','murmur',20,10,.05],
+  ['pmo','coffee',1,26,.03],['pmo','typing',10,28,.3],['pmo','notif',10,28,.06],['pmo','click',4,28,.08],
+  ['quiet','murmur',32,28,.03]
 ];
 function ambTick(){
   const c=SND.ctx;if(!c||!SND.ambGain||!SND.ambOn) return;
@@ -568,19 +575,26 @@ put('O',[[37,14]]); put('D',[[28,16],[29,16],[32,16],[33,16],[28,19],[29,19],[32
 put('C',[[13,9]]); put('U',[[26,9]]); put('P',[[1,9],[38,9]]);
 put('Q',[[1,13],[2,13]]); put('P',[[2,22]]); put('H',[[16,24],[17,24],[22,24]]); put('P',[[1,24],[25,22]]);
 put('|',[[38,22],[38,24]]); put('G',[[38,23]]);
+// Bottom row: the PMO (Tasha & Mieto), Room 404, and the Quiet Room
+carve(1,26,12,30);carve(14,26,25,30);carve(27,26,38,30);
+for(const x of [6,7,19,20,32,33]) map[25][x]='.';
+put('A',[[3,25]]); put('E',[[1,26]]); put('D',[[3,28],[4,28]]); put('Y',[[5,28]]); put('L',[[9,28],[10,28],[11,28]]); put('J',[[12,27]]); put('P',[[1,30],[12,30]]);
+put('W',[[16,25],[23,25]]); put('X',[[18,25],[31,25]]); put('T',[[17,28],[18,28],[19,28],[20,28],[21,28],[22,28]]); put('P',[[14,30],[25,30]]);
+put('B',[[29,28],[35,28]]); put('P',[[27,26],[38,26],[38,30]]);
 
 const tile=(x,y)=>(x<0||y<0||x>=MW||y>=MH)?'#':map[y][x];
-const isWall=t=>'#=W'.includes(t);
+const isWall=t=>'#=WAX'.includes(t);
 function roomAt(x,y){
+  if(y>=26) return x<=12?'pmo':x<=25?'r404':'quiet';
   if(y>=1&&y<=8) return x<=12?'exec':x<=25?'legal':'design';
   if(y>=9&&y<=11) return 'hall';
   if(y>=12&&y<=21) return x<=12?'eng':x<=25?'data':'sales';
   return 'lobby';
 }
-const ROOM_NAMES={exec:'Executive Suite',legal:'Legal Vault',design:'Design Studio',hall:'Main Corridor',eng:'Engineering Pit',data:'Data Lab',sales:'Sales & Support',lobby:'Reception'};
+const ROOM_NAMES={exec:'Executive Suite',legal:'Legal Vault',design:'Design Studio',hall:'Main Corridor',eng:'Engineering Pit',data:'Data Lab',sales:'Sales & Support',lobby:'Reception',pmo:'Delivery Excellence (PMO)',r404:'Room 404',quiet:'Quiet Room'};
 
 /* ---------- TILE ART ---------- */
-const FLOORS={exec:['#5b2c37','#51262f'],legal:['#2e4a3b','#284032'],design:['#b48d5e','#a07b4f'],eng:['#474d5b','#414653'],data:['#2a3c55','#33486a'],sales:['#7b4b2b','#6f4325'],hall:['#cbc3ae','#bcb39d'],lobby:['#6f6a5c','#666153']};
+const FLOORS={exec:['#5b2c37','#51262f'],legal:['#2e4a3b','#284032'],design:['#b48d5e','#a07b4f'],eng:['#474d5b','#414653'],data:['#2a3c55','#33486a'],sales:['#7b4b2b','#6f4325'],hall:['#cbc3ae','#bcb39d'],lobby:['#6f6a5c','#666153'],pmo:['#3b4a66','#34425c'],r404:['#5a5f6b','#525762'],quiet:['#4f6b5a','#486352']};
 function R(c,px,py,x,y,w,h,col){c.fillStyle=col;c.fillRect(px+x,py+y,w,h)}
 function drawFloor(c,x,y){
   const room=roomAt(x,y),[a,b]=FLOORS[room],px=x*T,py=y*T;
@@ -622,6 +636,13 @@ function drawThing(c,t,x,y,px=x*T,py=y*T){
         r(8,6,3,3,'#ffd56a');r(11,7,3,3,'#ff8fb1');r(9,10,3,3,'#8fd3ff');r(3,11,6,2,'#c9a24a');r(4,11,4,1,'#5e3c22');
       } break;
     case 'Z': r(2,1,12,11,'#cfc6a8');r(3,2,10,8,'#0f2a1f');r(5,4,2,2,'#ffb547');r(9,4,2,2,'#ffb547');r(6,7,4,1,'#ffb547');r(5,6,1,1,'#ffb547');r(10,6,1,1,'#ffb547');r(6,12,4,2,'#9a9384');r(4,14,8,1,'#7c7566');break;
+    case 'A': r(3,1,10,10,'#f2e6c8');r(3,1,10,2,'#d64545');r(4,4,8,5,'#3a6fd1');r(5,5,6,1,'#9aa4b8');r(7,6,2,2,'#ffb547');r(6,8,4,1,'#5e3c22');r(3,10,10,1,'#c9bfa5');break;
+    case 'X': r(3,3,10,6,'#2b2f38');r(3,3,10,1,'#4a5060');r(4,5,8,1,'#ffb547');r(4,7,6,1,'#ece6d6');break;
+    case 'E': r(3,3,10,12,'#a9afbb');r(3,3,10,2,'#d8dde6');r(4,6,8,4,'#2b2f38');r(6,9,4,1,'#5e3c22');r(6,11,4,3,'#f4f4f4');r(6,11,4,1,'#7a4a2a');r(10,4,2,1,'#74d9a8');r(3,14,10,1,'#6e7480');break;
+    case 'Y': r(1,3,14,9,'#8a5a35');r(1,11,14,2,'#5e3c22');r(3,3,10,5,'#cfe8ff');r(4,3,2,2,'#ff8fb1');r(7,2,2,2,'#ffd56a');r(10,3,2,2,'#74d9a8');r(6,5,2,1,'#d64545');r(9,5,2,1,'#b388eb');r(3,7,10,1,'#9fc3e0');break;
+    case 'L': r(1,3,14,9,'#8a5a35');r(1,11,14,2,'#5e3c22');r(4,1,8,6,'#1c2230');r(5,2,6,4,'#2b6cb0');r(5,2,6,1,'#cfe0f5');r(5,4,5,1,'#f4f4f4');r(7,7,2,1,'#1c2230');r(5,9,6,1,'#d7d2c6');break;
+    case 'J': r(5,10,6,5,'#9a5030');r(5,10,6,1,'#b7653f');r(3,3,10,8,'#5fd17a');r(5,2,6,2,'#5fd17a');r(5,4,2,2,'#a6f0b5');r(9,6,2,2,'#a6f0b5');r(11,12,4,3,'#74a9d9');r(14,11,1,1,'#74a9d9');break;
+    case 'V': r(2,3,12,11,'#f4f4f4');r(2,3,12,3,'#d64545');r(4,1,2,3,'#555');r(10,1,2,3,'#555');[[4,8],[7,8],[10,8],[4,11],[7,11]].forEach(([a,b])=>r(a,b,2,2,'#2b2f38'));r(10,11,2,2,'#d64545');break;
     case 'N': r(2,1,12,14,'#f5edc8');r(2,1,12,2,'#d64545');for(let i=5;i<14;i+=2)r(4,i,8,1,'#9aa4b8');r(1,1,1,14,'#2b2f38');break;
   }
 }
@@ -635,7 +656,7 @@ const mapCanvas=document.createElement('canvas');mapCanvas.width=MW*T;mapCanvas.
       if(isWall(tile(x-1,y))) R(c,x*T,y*T,0,0,2,16,'rgba(0,0,0,.14)');
       if(isWall(tile(x+1,y))) R(c,x*T,y*T,15,0,1,16,'rgba(0,0,0,.1)');
     }
-    if('DFSKBTOCUHMPQ'.includes(t)){R(c,x*T,y*T,2,13,12,2,'rgba(0,0,0,.22)');R(c,x*T,y*T,3,15,10,1,'rgba(0,0,0,.12)')}
+    if('DFSKBTOCUHMPQEYLJ'.includes(t)){R(c,x*T,y*T,2,13,12,2,'rgba(0,0,0,.22)');R(c,x*T,y*T,3,15,10,1,'rgba(0,0,0,.12)')}
     if(t!=='.'&&t!=='#'&&t!=='G') drawThing(c,t,x,y);
   }
 })();
@@ -707,7 +728,10 @@ const LOOKS={
   priya:{skin:'#a26a45',hair:'#120c0a',style:'bun',shirt:'#5aa9a0',pants:'#5aa9a0'},
   hal:{skin:'#7b4a2e',hair:'#111',style:'short',shirt:'#3d3d45',hood:true,pants:'#22252c'},
   rafael:{skin:'#c68a5e',hair:'#3a2a20',style:'short',shirt:'#7a5ea8',hood:true,headset:true,pants:'#2d3446'},
-  bianca:{skin:'#f1c8a8',hair:'#d8553a',style:'long',shirt:'#2b2b33',coat:'#e86a92',pants:'#2b2b33'}
+  bianca:{skin:'#f1c8a8',hair:'#d8553a',style:'long',shirt:'#2b2b33',coat:'#e86a92',pants:'#2b2b33'},
+  tasha:{skin:'#c68a5e',hair:'#2b1a12',style:'long',shirt:'#f4f4f4',coat:'#8a2846',pants:'#2b2b33',glasses:true},
+  mieto:{skin:'#f1c9a5',hair:'#6b4a2b',style:'bun',shirt:'#9fd3c7',pants:'#4a5568',lanyard:'#ffb547'},
+  geepaw:{skin:'#e9b98f',hair:'#d0d0d0',style:'bald',shirt:'#f4f4f4',coat:'#6b5a45',tie:'#d64545',pants:'#4a4038'}
 };
 
 /* ---------- CUSTOMERS (Chapter 2) ---------- */
@@ -827,7 +851,7 @@ function npcList(){
     {id:'legal',name:'Hollis Vanterpool',role:'General Counsel',x:20,y:3,dir:'down',seated:true,ch:[1,2,3,4,5,6]},
     {id:'design',name:'Juno Lake-Arriaga',role:'Principal Designer',x:35,y:4,dir:'left',ch:[1,2,3,4,5,6]},
     {id:'sales',name:'Chad Merriweather',role:'Enterprise Sales',x:35,y:16,dir:'down',ch:[1,2,3,4,5,6]},
-    {id:'support',name:'Tasha Greene',role:'Support Lead',x:36,y:19,dir:'left',ch:[1,2,3,4,5,6]},
+    {id:'support',name:'Rosa Greene',role:'Support Lead',x:36,y:19,dir:'left',ch:[1,2,3,4,5,6]},
     {id:'cs',name:'Owen Park',role:'Customer Success',x:30,y:13,dir:'down',ch:[1,2,3,4,5,6]},
     {id:'eng',name:'Marguerite Oyelaran',role:'Engineering Lead',x:11,y:17,dir:'left',ch:[1,2,3,4,5,6]},
     {id:'data',name:'Dr. Ada Okafor',role:'Head of Data',x:20,y:15,dir:'down',seated:true,ch:[1,2,3,4,5,6]},
@@ -855,7 +879,10 @@ function npcList(){
     {id:'gary',x:15,y:22,dir:'down',cust:true,ch:[2]},
     {id:'tiffany',x:23,y:24,dir:'up',cust:true,ch:[2]},
     {id:'priya',x:27,y:22,dir:'down',cust:true,ch:[2,5]},
-    {id:'hal',x:34,y:24,dir:'up',cust:true,ch:[2,5]}
+    {id:'hal',x:34,y:24,dir:'up',cust:true,ch:[2,5]},
+    {id:'tasha',name:'Tasha',role:'Director of Delivery Excellence',x:4,y:27,dir:'down',seated:true,walker:true,mode:'desk',home:[4,27],ch:[1,2,3,4,5,6]},
+    {id:'mieto',name:'Mieto',role:'Associate Delivery Coordinator',x:10,y:27,dir:'down',seated:true,ch:[1,2,3,4,5,6]},
+    {id:'geepaw',name:'GeePaw',role:'Assistant to the Customer',x:0,y:0,dir:'down',popup:true,present:false,ch:[1,2,3,4,5,6]}
   ];
   L.forEach(n=>{
     n.look=LOOKS[n.id==='design'?'design':n.id]||LOOKS[n.id];
@@ -866,8 +893,8 @@ function npcList(){
   return L;
 }
 function placePlayer(){CAM.init=false;player={x:3,y:23,px:3*T,py:23*T,dir:'right',moving:false,prog:0,tx:3,ty:23}}
-const visible=n=>!(n.id==='dev2'&&S.quit)&&!(n.id==='tyler'&&!S.tyler)&&n.ch.includes(S.ch)&&(!n.cust||(S.ch===2&&(n.id==='chip'||S.room.includes(n.id)))||(S.ch===5&&S.c5&&S.c5.incidentDone&&(n.id==='dolores'||S.room.includes(n.id))));
-const npcAt=(x,y)=>npcs.find(n=>visible(n)&&((n.x===x&&n.y===y)||((n.wander||n.follower)&&n.moving&&n.tx===x&&n.ty===y)));
+const visible=n=>!(n.popup&&!n.present)&&!(n.id==='dev2'&&S.quit)&&!(n.id==='tyler'&&!S.tyler)&&n.ch.includes(S.ch)&&(!n.cust||(S.ch===2&&(n.id==='chip'||S.room.includes(n.id)))||(S.ch===5&&S.c5&&S.c5.incidentDone&&(n.id==='dolores'||S.room.includes(n.id))));
+const npcAt=(x,y)=>npcs.find(n=>visible(n)&&((n.x===x&&n.y===y)||((n.wander||n.follower||n.walker)&&n.moving&&n.tx===x&&n.ty===y)));
 const walkable=(x,y)=>tile(x,y)==='.'&&!npcAt(x,y);
 const byId=id=>npcs.find(n=>n.id===id);
 
@@ -924,7 +951,7 @@ function objectives0(){
     {t:'Agree a rollout plan with Marguerite',done:!!S.c5.rollout,req:true},
     {t:'Get Legal sign-off',done:!!S.c5.legal,req:true},
     {t:'Pick the launch metric with Ada (Data Lab)',done:!!S.c5.metric,req:true},
-    {t:'Optional: prepare Support (Tasha)',done:S.c5.support!==undefined,req:false},
+    {t:'Optional: prepare Support (Rosa)',done:S.c5.support!==undefined,req:false},
     {t:'Board the Release Train (east end of Reception)',done:!!S.c5.launched,req:true},
     {t:'Handle whatever happens next',done:!!S.c5.incidentDone,req:true},
     {t:'Metrics review with Brad',done:S.c5.honest!==undefined,req:true}
@@ -981,7 +1008,7 @@ function addNote(who,text,kind,topic){
 /* ---------- DIALOGUE ---------- */
 let dlg=null, typing=null;
 const pctx=$('portrait').getContext('2d');
-const DEFAULT_EXPR={vp:'smug',sales:'grin',kevin:'grin',intern:'grin',tiffany:'grin',chip:'grin',bianca:'confident',dev1:'tired',dev2:'tired',gary:'focused',hal:'focused'};
+const DEFAULT_EXPR={vp:'smug',sales:'grin',kevin:'grin',intern:'grin',tiffany:'grin',chip:'grin',bianca:'confident',dev1:'tired',dev2:'tired',gary:'focused',hal:'focused',tasha:'grin',mieto:'grin',geepaw:'panicked'};
 function portrait(p,talk=false){
   pctx.clearRect(0,0,24,24);pctx.fillStyle='#1e2433';pctx.fillRect(0,0,24,24);
   if(p.look){
@@ -1074,6 +1101,7 @@ function openDlg(o){
   $('dlg').scrollTop=0;
 }
 function showChoices(){
+  if(!dlg)return;
   const box=$('choices');box.innerHTML='';
   const cs=(dlg.choices&&dlg.choices.length)?dlg.choices:[{t:'Continue',act:closeDlg}];
   cs.forEach((c,i)=>{const b=document.createElement('button');b.type='button';
@@ -1096,7 +1124,7 @@ function converse(n,text,choices,opts={}){
   const reopen=()=>converse(n,text,choices,opts);
   let html=opts.html||'';
   if(live.some(c=>c.door)&&(S.doorLegend||0)<4){S.doorLegend=(S.doorLegend||0)+1;html+='<p style="color:var(--dim);font-size:17px">⇄ two-way door: easy to undo, decide fast · → one-way door: can’t be undone, pause first</p>'}
-  openDlg({who:n,text,html,choices:live.map(c=>{
+  openDlg({who:n,text,html,expr:opts.expr,choices:live.map(c=>{
     const notes=[c.d?`${fmtDays(c.d)} day${c.d===1?'':'s'}`:'',c.door?DOOR_NOTE[c.door]:''].filter(Boolean).join(' · ');
     const run=()=>{
       if(c.door){S.doors=Object.assign({one:0,two:0},S.doors||{});S.doors[c.door]++}
@@ -1615,7 +1643,7 @@ function launch(){
   const opts=[];
   if(inc.sev===1){
     opts.push({t:"Write a help article and support macros tonight.",fx:{sanity:-5},then:()=>{S.c5.contained=true;S.c5.response='docs'},r:"By midnight there's a help article, three macros and a GIF. Tickets slow down by morning."});
-    opts.push({t:"Ask Tasha's team to handle it.",fx:{morale:-5},then:()=>{S.c5.contained=true;S.c5.response='support'},r:"Tasha's team handles it. They always do. They'd like to be asked earlier next time."});
+    opts.push({t:"Ask Rosa's team to handle it.",fx:{morale:-5},then:()=>{S.c5.contained=true;S.c5.response='support'},r:"Rosa's team handles it. They always do. They'd like to be asked earlier next time."});
   } else {
     if(has('q2')) opts.push({door:'two',t:'Switch it off with the feature flag, then fix it properly.',fx:{morale:5},then:()=>{S.c5.contained=true;S.c5.response='flag'},r:"One toggle. Thirty seconds. The fix ships calmly on Thursday. This is why the flag existed."});
     opts.push({door:'two',t:'Roll back the whole release.',fx:{trust:-10,sanity:-10},then:()=>{S.c5.contained=true;S.c5.response='rollback'},r:"Rolled back. Everything's gone, including the parts that worked. Brad asks what 'rollback' means on the all-hands slide."});
@@ -1633,7 +1661,7 @@ function pickIncident(){
   if(has(S.build.platItem)&&S.c3.platform==='wait') return {key:'platform',sev:2,t:`The ${S.build.svc} was never connected. Anything that depends on it silently does nothing.`};
   if(!has('q1')) return {key:'tests',sev:2,t:"The 2016 scheduling engine double-booked forty shifts across Marcus's warehouses. Marcus has emailed you. The subject line is 'Item 41'."};
   if(overTrue()>4) return {key:'rushed',sev:2,t:S.vpOutcome==='enterprise'?"Rushed code: the payroll export rounds every shift to the nearest hour. Marcus's payroll team has questions. Many questions.":isAI()?"Rushed code: the chat panel freezes the schedule page on older phones, which is most of the phones in a kitchen.":"Rushed code: cover suggestions ignore time zones. A Vancouver clinic was offered a nurse from Halifax."};
-  if(!S.c5.support) return {key:'support',sev:1,t:"Support got 300 tickets asking where the new button is. Tasha's status says 'unavailable (spiritually)'."};
+  if(!S.c5.support) return {key:'support',sev:1,t:"Support got 300 tickets asking where the new button is. Rosa's status says 'unavailable (spiritually)'."};
   return null;
 }
 function commsStep(){
@@ -1724,7 +1752,7 @@ function endChapter5(){
     S.c5.q3review?'You spent a day reviewing with Legal and caught problems before customers did.':S.c5.legal?'Legal signed off.':'',
     S.c5.support?'Support was trained before launch.':'Support found out about the launch from customers.',
     inc?`Incident: ${inc.t}`:S.c5.caught?'An engineer caught a serious bug the night before customers would have hit it.':'No incident. Dashboards stayed green.',
-    inc?({flag:'You switched it off with the feature flag and fixed it calmly.',rollback:'You rolled back the whole release.',hotfix:S.c5.contained?'You hotfixed it overnight. The tests caught your first, wrong fix.':'You hotfixed it overnight without tests. It took two rounds.',docs:'You wrote help docs and macros overnight.',support:"Tasha's team absorbed it."}[S.c5.response]):'',
+    inc?({flag:'You switched it off with the feature flag and fixed it calmly.',rollback:'You rolled back the whole release.',hotfix:S.c5.contained?'You hotfixed it overnight. The tests caught your first, wrong fix.':'You hotfixed it overnight without tests. It took two rounds.',docs:'You wrote help docs and macros overnight.',support:"Rosa's team absorbed it."}[S.c5.response]):'',
     inc?({honest:'You told customers exactly what happened.',quiet:'You fixed it quietly.',blame:'You blamed the Platform team publicly.'}[S.c5.comms]):'',
     `Launch metric: ${METRICS[S.c5.metric||'clicks']}. ${S.c5.result}`,
     S.c5.honest?'You reported the real number.':'You celebrated the biggest number.'
@@ -1855,7 +1883,7 @@ C6.vp=n=>{
     return converse(n,first.text,first.ch);
   }
   if(!S.c6.pm) return say(n,"Run the postmortem first. The board will ask what we learned, and 'nothing' isn't a slide.");
-  if(!S.c6.fair||(needsFate()&&!S.c6.fate)) return say(n,`Before the roadmap: ${!S.c6.fair?'Tasha says something is going on in Support tickets. ':''}${needsFate()&&!S.c6.fate?`Ada has numbers on ${fateLabel()}. `:''}Sort that out first.`);
+  if(!S.c6.fair||(needsFate()&&!S.c6.fate)) return say(n,`Before the roadmap: ${!S.c6.fair?'Rosa says something is going on in Support tickets. ':''}${needsFate()&&!S.c6.fate?`Ada has numbers on ${fateLabel()}. `:''}Sort that out first.`);
   if(!S.c6.bets.length) return say(n,"Bring me a plan for next quarter. The planning board is on your laptop. I'll be here. Thinking about agents.");
   if(!S.c6.presented) return presentRoadmap(n);
   say(n,"Board meeting's tomorrow. I've already practised saying 'agentic' in the mirror.");
@@ -1905,7 +1933,7 @@ function fairness(n){
   converse(n,text,[
     {door:'two',t:fix,fx:{morale:5},then:()=>{S.c6.fair='fix';return addFair()},r:"Ticket closed with a real fix on the roadmap. The server who emailed us gets a reply from an actual person. You."},
     {door:'two',t:"Switch the automation off until it's fixed.",fx:{trust:-5},then:()=>{S.c6.fair='pause';return addFair()},r:"Paused. Brad asks why a 'win' is turned off. You explain. He says 'optics'. You say 'people'. He sighs."},
-    {door:'one',t:"It's doing what customers asked for. Not our problem.",then:()=>{S.c6.fair='ignore'},r:"Ticket closed: 'working as intended'. Tasha reads it twice and doesn't say anything. That's worse than if she had."}
+    {door:'one',t:"It's doing what customers asked for. Not our problem.",then:()=>{S.c6.fair='ignore'},r:"Ticket closed: 'working as intended'. Rosa reads it twice and doesn't say anything. That's worse than if she had."}
   ]);
 }
 function presentRoadmap(n){
@@ -2172,6 +2200,7 @@ function crowdLine(n){
 }
 function talkTo(n){
   if(COACH&&n.id==='intern')COACH.talked=true;
+  if(n.id==='tasha'||n.id==='mieto'||n.id==='geepaw') return TALK[n.id](n);
   if(n.crowd) return say(n,crowdLine(n));
   if(n.id==='tyler') return TALK.tyler(n);
   if(S.ch===6&&!C6[n.id]&&DEF6[n.id]) return say(n,DEF6[n.id]);
@@ -2185,6 +2214,198 @@ function talkTo(n){
   }
   TALK[n.id](n);
 }
+/* ---------- THE PMO: TASHA, MIETO & GEEPAW ---------- */
+const TASHA_OPEN=["Hi {pm}! Just circling back. And forward. And back. It's a spiral, really.","{pm}! I'm not micromanaging. I'm macro-checking in, at micro-intervals.","Hey {pm}! Any blockers? Besides me?","Hi! I believe in radical transparency. That's why I'm standing directly behind you.","Quick one! We're doing Scaled Agile now. Mostly the 'scaled' part. Like a fish.","{pm}! Scrum? I barely know 'em. Anyway.","Hey! Can I get an ETA on the ETA?","Hi {pm}! I was in the area. The area is wherever you are."];
+const TASHA_Q={
+  1:["Is the PRD done? Or done-done? Or done-done-done?","Brad's idea is on the roadmap. Is the roadmap agile?","Is your sprint agile, or is it just a jog with a Jira board?"],
+  2:["Can you put the customer interviews in a Gantt chart?","How many insights per hour are we getting? I need a number. Any number.","Is discovery done? My slide already has a tick next to it."],
+  3:["Why does the scope board have feelings?","Your burndown chart looks like a burn-up. Is the team okay? Is the building okay?","Is your sprint agile, or is it just a jog with a Jira board?"],
+  4:["Brad says we're doing parity. Is parity agile?","If we add the wizard hat, does that change the velocity? Of the hat?","Can we move the demo up a week? Not the work. Just the demo."],
+  5:["Love the launch. Quick one: is it agile?","Is the Release Train on time? I'm asking for the train.","Did the launch launch, or did it just ship? I need the right verb for my slide."],
+  6:["For the blameless postmortem, can we name names? For alignment.","Next quarter's plan: can it be done by this quarter?","Is the retro retro enough? I've heard good things about VHS."]
+};
+const TASHA_THOUGHTS=["Heels. Spoon. Mug. She's coming.","Act natural. Open a spreadsheet. Any spreadsheet.","Is that a status meeting walking toward me?","If I stand very still, maybe she'll think I'm a plant.","I can hear the stirring.","Look busy. No. Look DONE."];
+const INVITES=[
+  {t:'Pre-sync to align on the sync',len:'30 min',ag:'Align on what the sync is for.'},
+  {t:'Quick 5-min chat',len:'60 min',ag:'Quick chat.'},
+  {t:'Retro on the retro',len:'45 min',ag:'What went well in the retro? What could be more retro?'},
+  {t:'Kickoff for the kickoff planning',len:'90 min',ag:'Plan the kickoff. Kick off the plan.'},
+  {t:'Stand-up (seated)',len:'45 min',ag:'Chairs provided. Standing discouraged.'},
+  {t:'Lunch & Learn: What is Jira?',len:'60 min',ag:'No lunch. Limited learn.'},
+  {t:'FW: FW: RE: FW: sync?',len:'30 min',ag:'See thread below. The thread is 212 emails.'},
+  {t:'Meeting to discuss the number of meetings',len:'60 min',ag:'Recurring. Weekly. Forever.'},
+  {t:'Blocker Removal Session',len:'60 min',ag:'TBD.'},
+  {t:'Alignment Alignment',len:'45 min',ag:'Align the alignment.'},
+  {t:'HOLD: do not book over',len:'2 hrs',ag:'(Booked over by: Mieto.)'}
+];
+const MIETO=[
+  {q:"Has the integration integrated yet? Tasha wants it integrated by EOD. Whose EOD? Unclear.",a:"\"Ohhh. So it's integrated when two systems talk to each other? Like Tasha and Brad? ...Oh no. So it's not integrated.\""},
+  {q:"What's the status of the repo that's hot? Is it still hot? Should I put it in the fridge?",a:"\"Ohhh. 'Hot' means a lot of people are changing it. So no fridge. Got it. I'll unplug the fridge.\""},
+  {q:"Tasha asked me to ask you if you've been asked.",a:"\"So I should ask you the actual question, not whether you've been asked. ...What was the question? I'll ask her if she's been asked.\""},
+  {q:"Is the API okay? Tasha said to check if it's RESTing.",a:"\"So REST is a style, not a nap. I let it sleep in this morning. That's on me.\""},
+  {q:"Someone said we have technical debt. How much do we owe? Who do I Venmo?",a:"\"So it's shortcuts we pay back later, in time, not money. Can I pay it in meetings? I have so many meetings.\""},
+  {q:"What's a merge conflict? Do they need a mediator? I can book one.",a:"\"So two people changed the same lines and the computer can't pick. Like Brad and Tasha with the roadmap! I'm booking the mediator anyway.\""},
+  {q:"Is the backend in the back? I checked. It's just the supply closet.",a:"\"So the backend is the part customers never see. Like Tasha's calendar. Or the supply closet. I was close!\""},
+  {q:"Is the pipeline leaking? Should I call facilities?",a:"\"So the pipeline is how code gets to customers, and 'leaking' meant bugs. Facilities is still coming. They're very excited.\""},
+  {q:"Can you move the Jira from left to right? I think that's how it works.",a:"\"So you move a ticket when the work actually moves. Not to make the board look nice. ...I moved them all to Done yesterday. Should I move them back?\""},
+  {q:"Is the cloud up? It's sunny today, so probably.",a:"\"So the cloud is just someone else's computer. Whose? Can we visit?\""},
+  {q:"I made you a Gantt chart. *She hands you a sticky note. It says GANTT.*",a:"\"You're right, it needs dates.\" *She writes SOON on it.*"},
+  {q:"I put a meeting on your calendar to discuss your calendar.",a:"\"So the problem is too many meetings, and I'm... the meetings. Oh. I'll set up a meeting about that. Kidding! Mostly.\""}
+];
+const RELAY=["Also, Tasha wants to know if your sprint is fragile.","Also, Tasha asked if the roadmap is load-bearing.","Also, Tasha says stand-up is now a sit-down. Due to feedback.","Also, Tasha wants to know if the backlog is backlogged."];
+const CANDY=["Kanbonbons. Pull one. Never push.","Sour Patch Kids. Sour, then sweet. Like a release.","A label on the bowl: WIP LIMIT: 1. Tasha is watching.","Smarties. For the retro. Take one and say what went well.","Jawbreakers. Estimated chew time: one sprint. Actual: three.","Mints labelled 'Burndown Breath'. They taste like pressure."];
+const ESPRESSO=["Single-origin, two-week roast. Brewed in sprints.","Decaf? We're agile, not fragile.","It has a definition of done. It beeps. Unlike your team.","A Jira ticket is taped to it: 'COFFEE-1: Make coffee. In Progress since 2019.'","The cups say VELOCITY. They're very small."];
+const GEEPAW_YELL=["WHAT IS THE STATUS OF THIS? AND THAT? AND THE OTHER THING? THE CUSTOMER IS WAITING!","THE CUSTOMER IS WAITING! WHICH CUSTOMER? THE CUSTOMER! THEY'RE ALWAYS WAITING! THAT'S WHAT MAKES THEM CUSTOMERS!","I'M THE ASSISTANT TO THE CUSTOMER! NOT THE ASSISTANT CUSTOMER! TO THE CUSTOMER! WHERE IS MY FEATURE?!","THE CUSTOMER IS ALWAYS RIGHT! AND RIGHT NOW, THEY'RE WAITING! RIGHT NOW!","I DON'T HAVE A DESK! I HAVE A SENSE OF URGENCY! STATUS!","STATUS?! STATUS!! I NEED A STATUS ON THE STATUS!","THE CUSTOMER HAS BEEN ON HOLD SINCE THE LAST REORG! THEY'RE HUMMING THE HOLD MUSIC!","YOU SAID 'SOON'! IT IS NOW LATER THAN SOON! IT'S PRACTICALLY EVENTUALLY!"];
+const pmTalk=s=>s.replace(/\{pm\}/g,pmName());
+const incidentLive=()=>S.ch===5&&S.c5&&S.c5.launched&&S.c5.incident&&!S.c5.incidentDone;
+const near=(n,d)=>Math.abs(n.x-player.x)+Math.abs(n.y-player.y)<=d;
+
+function tashaQuestion(n,opener){
+  S.tashaI=(S.tashaI||0)+1;
+  const op=opener||pmTalk(TASHA_OPEN[(S.tashaI-1)%TASHA_OPEN.length]);
+  const qs=TASHA_Q[S.ch]||TASHA_Q[1];
+  converse(n,`${op}\n${qs[S.tashaI%qs.length]}`,[
+    {t:"It's done-ish.",fx:{sanity:-4,trust:-2},r:()=>pickOne(["\"Done-ish isn't a status. It's a lifestyle.\" She writes ISH on a sticky note and puts it on your monitor.","\"Ish.\" She types it into Jira. Jira now has a status called 'Ish'. It already has eleven tickets."])},
+    {t:'Velocity is up 20%!',fx:{sanity:-3},r:()=>pickOne(["\"Wonderful! In which direction?\" You don't know. She doesn't either. She's thrilled.","\"Up! Love up. Up from what?\" You say 'from before'. She writes down FROM BEFORE and underlines it twice."])},
+    {t:"Here's what customers got out of it.",fx:{sanity:-2,trust:2},then:()=>{if(!S.tashaLesson){S.tashaLesson=true;return {t:'Outcomes over output',c:'note'}}},r:"She blinks. \"...That's not a percentage.\" She stirs her coffee for a long time. Then she walks away, confused but satisfied."},
+    {t:"I'll send you a status update.",fx:{sanity:-5},then:()=>{if((S.mietoN||0)<3)S.mietoT=Math.max(S.mietoT||0,(S.mietoNext||0)-60*8)},r:"\"Perfect! Can you send me a status update on the status update? Mieto will set up a meeting to review both.\" Somewhere, Mieto starts typing."}
+  ]);
+}
+TALK.tasha=n=>{
+  if(n.mode!=='desk') return tashaQuestion(n);
+  const intro=!S.tashaMet;S.tashaMet=true;
+  if(S.tashaToldAt&&frame-S.tashaToldAt<60*90) return say(n,"You already told me. I wrote it down. Then I made a dashboard of it. The dashboard says TOLD.");
+  converse(n,(intro?"Tasha. Director of Delivery Excellence. I don't own your roadmap. I own the meeting where we discuss who owns your roadmap.\n":"")+"Oh! You came to me? Unprompted? Is this a proactive status update? I need to sit down. I am sitting down. I need to sit down more.",[
+    {t:"Yes. Here's where things stand, before you ask.",fx:{trust:3,sanity:3},then:()=>{S.tashaToldAt=frame;S.tashaT=-60*90;return {t:'Tasha will leave you alone for a while',c:'note'}},r:"\"Status before I asked. That's the most agile thing anyone's done in this building.\" She dabs her eye with a sticky note. \"I'll leave you alone. For a bit. I'm putting it in my calendar.\""},
+    {t:'Just passing through.',next:()=>tashaQuestion(n,"Passing through? Great. While you're through.")},
+    {t:'Is the candy free?',next:()=>candy(true)}
+  ]);
+};
+function tashaArrive(n){
+  n.dir=faceTo(n);player.dir=n.x>player.x?'right':n.x<player.x?'left':n.y>player.y?'down':'up';held.length=0;
+  play('clink',1);n.mode='return';S.tashaVisits=(S.tashaVisits||0)+1;
+  tashaQuestion(n);
+}
+function stepToward(n,goal,speedBlockPlayer=true){
+  const W=MW,H=MH,start=n.y*W+n.x,prev=new Int32Array(W*H).fill(-1);prev[start]=start;
+  const occ=new Set();npcs.forEach(o=>{if(o!==n&&visible(o)){occ.add(o.y*W+o.x);if(o.moving)occ.add(o.ty*W+o.tx)}});
+  occ.add(player.y*W+player.x);if(player.moving)occ.add(player.ty*W+player.tx);
+  const q=[start];let found=-1,qi=0;
+  while(qi<q.length){const c=q[qi++];const x=c%W,y=(c/W)|0;
+    if(c!==start&&goal(x,y)){found=c;break}
+    for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const nx=x+dx,ny=y+dy,i=ny*W+nx;
+      if(nx<0||ny<0||nx>=W||ny>=H||prev[i]!==-1||tile(nx,ny)!=='.'||occ.has(i))continue;prev[i]=c;q.push(i)}}
+  if(found<0) return false;
+  let c=found;while(prev[c]!==start)c=prev[c];
+  const nx=c%W,ny=(c/W)|0;n.moving=true;n.prog=0;n.tx=nx;n.ty=ny;n.dir=nx>n.x?'right':nx<n.x?'left':ny>n.y?'down':'up';return true;
+}
+function tashaTick(){
+  const n=byId('tasha');if(!n)return;
+  if(n.moving){n.prog+=1.25;const p=Math.min(1,n.prog/T);n.px=(n.x+(n.tx-n.x)*p)*T;n.py=(n.y+(n.ty-n.y)*p)*T;
+    if(n.prog>=T){n.x=n.tx;n.y=n.ty;n.px=n.x*T;n.py=n.y*T;n.moving=false;n.stepN=(n.stepN||0)+1;
+      const v=spatial(n.x,n.y,13);if(v>.04)play('heel',v);if(n.stepN%9===0&&v>.1)play('clink',v)}
+    return}
+  if(n.mode==='desk'){
+    if(incidentLive()||roomAt(player.x,player.y)==='pmo')return;
+    S.tashaT=(S.tashaT||0)+1;
+    if(S.tashaT>=(S.tashaNext||60*100)){S.tashaT=0;S.tashaNext=60*(120+Math.random()*60);n.mode='seek';n.seated=false;n.seekT=0;n.warned=false;
+      if((S.mietoHelp||0)>=2)toast("MIETO: TASHA'S COMING. MUG = LEVEL 2")}
+    return}
+  if(n.mode==='seek'){
+    n.seekT++;
+    if(!n.warned&&near(n,9)){n.warned=true;faceReact('alarm');think(pickOne(TASHA_THOUGHTS),{force:true})}
+    if(near(n,1)&&!player.moving)return tashaArrive(n);
+    if(n.seekT>60*45){n.mode='return';toast('TASHA SENT A SLACK INSTEAD');applyFx({sanity:-2},0);think("She sent a Slack: 'is it done? :)'. The smiley is load-bearing.",{force:true});return}
+    if((n.wait=(n.wait||0)-1)>0)return;
+    if(!stepToward(n,(x,y)=>Math.abs(x-player.x)+Math.abs(y-player.y)===1))n.wait=20;
+    return}
+  if(n.mode==='return'){
+    const [hx,hy]=n.home;
+    if(n.x===hx&&n.y===hy){n.mode='desk';n.seated=true;n.dir='down';return}
+    if((n.wait=(n.wait||0)-1)>0)return;
+    if(!stepToward(n,(x,y)=>x===hx&&y===hy))n.wait=30;
+  }
+}
+TALK.mieto=n=>{
+  const intro=!S.mietoMet;S.mietoMet=true;
+  const L=MIETO[(S.mietoI||0)%MIETO.length];S.mietoI=(S.mietoI||0)+1;
+  const relay=S.mietoI%3===0?'\n'+pickOne(RELAY):'';
+  const bonus=(S.mietoHelp||0)>=4&&S.mietoI%2===0?"\n(Also, I declined 'Retro on the retro' for you. You're welcome!)":'';
+  converse(n,(intro?"Hi! I'm Mieto, Associate Delivery Coordinator. I coordinate deliveries. Of meetings, mostly.\n":"Hi!! ")+L.q+relay+bonus,[
+    {t:'Explain it patiently.',fx:{sanity:-2},then:()=>{S.mietoHelp=(S.mietoHelp||0)+1;
+      if(S.mietoHelp===2)return {t:"Mieto will warn you when Tasha's coming",c:'note'};
+      if(S.mietoHelp===4)return {t:'Mieto will decline bad meetings for you',c:'note'}},r:L.a},
+    {t:'Yes.',r:()=>pickOne(["\"Great! I'll tell Tasha it's a yes. What was the question?\"","\"Yes! I'll put 'yes' in the tracker. Which tracker? All of them.\"","\"Perfect. I'll mark it green. Is green good? Tasha says green is good.\""])},
+    {t:'Ask Tasha.',then:()=>{if((S.mietoN||0)<3)S.mietoT=Math.max(S.mietoT||0,(S.mietoNext||0)-60*6)},r:"\"She said to ask you. I'll set up a meeting so you can ask each other!\""}
+  ]);
+};
+function mietoInvite(){
+  const inv=INVITES[(S.inviteI||0)%INVITES.length];S.inviteI=(S.inviteI||0)+1;
+  if((S.mietoHelp||0)>=4&&Math.random()<.5){play('invite');return say(byId('mieto'),`Mieto pings you: "I declined '${inv.t}' for you. Nobody was aligned anyway."`,{chips:applyFx({sanity:4},0)})}
+  play('invite');
+  const who={id:'invite',name:'Meeting invite',role:'From: Mieto (on behalf of Tasha)',tile:'V'};
+  const body=`"${inv.t}"\n${inv.len} · Room 404 (Meeting Not Found)\nAgenda: ${inv.ag}`;
+  const accept={t:'Accept',d:.5,fx:{sanity:-3,trust:1},r:()=>pickOne(["You go. Nobody else does. Mieto takes notes. The notes say: MEETING HAPPENED.","It runs twenty minutes over. The action item is a follow-up meeting. You're the organizer.","Tasha joins for the last two minutes and asks if the meeting was agile."])};
+  const decline={t:'Decline',then:()=>{S.tashaT=(S.tashaT||0)+60*40;return {t:'Tasha is coming sooner',c:'down'}},r:"Mieto replies \"No worries!!\" and forwards your decline to Tasha. With a screenshot. And the word 'thoughts?'."};
+  converse(who,body,[accept,decline,
+    {t:'Tentative',next:()=>converse(who,`RE: "${inv.t}"\nHi! Is tentative a yes? Just making sure the room is the right size :) — Mieto`,[accept,decline])}]);
+}
+function mietoTick(){
+  const t=byId('tasha');if(t&&t.mode!=='desk')return;
+  if(S.mietoCh!==S.ch){S.mietoCh=S.ch;S.mietoN=0;S.mietoT=0;S.mietoNext=60*(70+Math.random()*40)}
+  if(S.mietoN>=3||incidentLive())return;
+  if(++S.mietoT<S.mietoNext)return;
+  S.mietoT=0;S.mietoNext=60*(80+Math.random()*50);S.mietoN++;held.length=0;mietoInvite();
+}
+TALK.geepaw=n=>{
+  S.gpI=(S.gpI||0)+1;play('scream');const st=$('stage');st.classList.remove('shake');void st.offsetWidth;st.classList.add('shake');
+  faceReact('alarm');
+  converse(n,GEEPAW_YELL[(S.gpI-1)%GEEPAW_YELL.length],[
+    {t:"The developers are behind. Talk to them.",fx:{morale:-12,trust:2},r:"GeePaw writes DEVELOPERS: BEHIND on a sticky note and slaps it on Sam's monitor. Sam reads it. The whole pit reads it. Nobody says anything. That's worse.",after:geepawGone},
+    {t:"That's on me. The team's doing great. I'll get you an answer.",fx:{morale:8,sanity:-12},r:"GeePaw screams at you for four more minutes. Two desks over, the team quietly slides their headphones off to listen. Then they slide them back on, sitting a little straighter.",after:geepawGone},
+    {t:'Which customer?',fx:{sanity:-4},r:"He opens his mouth. He closes it. \"...THE CUSTOMER!\" He doesn't know. He's the Assistant to the Customer, not the customer. He storms off to find out.",after:geepawGone}
+  ],{expr:'panicked'});
+};
+function geepawGone(){const g=byId('geepaw');if(g&&g.present){g.present=false;play('poof')}}
+function geepawTick(){
+  const g=byId('geepaw');if(!g||g.present)return;
+  S.gpT=(S.gpT||0)+1;
+  const atDesk=player.x<=4&&player.y>=13&&player.y<=15&&!player.moving;
+  if(!atDesk||S.gpT<(S.gpNext||60*60)||incidentLive())return;
+  if(S.gpCh!==S.ch){S.gpCh=S.ch;S.gpN=0}
+  if(S.gpN>=2)return;
+  const sp=[[0,1],[1,0],[-1,0],[0,-1]].map(([a,b])=>[player.x+a,player.y+b]).find(([a,b])=>tile(a,b)==='.'&&!npcAt(a,b));
+  if(!sp)return;
+  S.gpT=0;S.gpNext=60*(150+Math.random()*90);S.gpN++;
+  Object.assign(g,{x:sp[0],y:sp[1],px:sp[0]*T,py:sp[1]*T,tx:sp[0],ty:sp[1],present:true});
+  g.dir=faceTo(g);player.dir=g.x>player.x?'right':g.x<player.x?'left':g.y>player.y?'down':'up';held.length=0;
+  play('poof');TALK.geepaw(g);
+}
+function officeTick(){if(COACH||dlg)return;tashaTick();if(dlg)return;mietoTick();if(dlg)return;geepawTick()}
+function officePressure(){
+  if(dlg&&dlg.who&&['tasha','invite','geepaw'].includes(dlg.who.id))return true;
+  const t=byId('tasha');return !!(t&&t.mode==='seek'&&near(t,8));
+}
+function resetOffice(){
+  const t=byId('tasha');if(t)Object.assign(t,{x:4,y:27,px:4*T,py:27*T,tx:4,ty:27,moving:false,prog:0,mode:'desk',seated:true,dir:'down',wait:0});
+  const g=byId('geepaw');if(g)g.present=false;
+  S.tashaT=0;S.tashaNext=60*(S.ch===1?100:120+Math.random()*40);S.gpT=0;S.gpNext=60*60;S.mietoCh=null;
+}
+function candy(fromTasha){
+  const who={name:'Candy bowl',role:"Tasha's desk",tile:'Y'};
+  const t=byId('tasha'),there=t&&t.mode==='desk';
+  if(S.candyCh===S.ch) return say(who,"You already had one this chapter. The WIP limit is one. Tasha has a dashboard for it.");
+  S.candyCh=S.ch;play('note');
+  const line=(fromTasha?"\"Nothing's free. It's a sprint tax. ...Fine, take one.\"\n":"")+pickOne(CANDY);
+  say(who,line,{chips:applyFx({sanity:4},0),after:there?()=>tashaQuestion(t,"That's a commitment. So."):null});
+}
+function espresso(){
+  const who={name:"Tasha's espresso machine",role:'Not facilities. Personal.',tile:'E'};
+  const t=byId('tasha'),there=t&&t.mode==='desk';
+  if(S.espCh===S.ch) return say(who,"It's in a cooldown. Like a sprint, but for coffee. "+pickOne(ESPRESSO));
+  S.espCh=S.ch;play('coffee');
+  say(who,pickOne(ESPRESSO)+" It's genuinely the best coffee in the building. That's the trap.",{chips:applyFx({sanity:10},0),after:there?()=>tashaQuestion(t,"Enjoying my coffee? Great. Since you're here."):null});
+}
 /* ---------- TERMINAL & OBJECTS ---------- */
 const TERMINAL={name:'Claudia',role:'Your AI assistant (lives on your laptop)',tile:'Z'};
 const TIPS={
@@ -2195,12 +2416,15 @@ const TIPS={
      "KEVIN PATROLS THE MAIN CORRIDOR. HE WANTS FIVE MINUTES. HE HAS NEVER TAKEN FIVE MINUTES.",
      "I WAS PROMISED A ROADMAP. I RECEIVED A ROAD. AND A MAP. SEPARATELY.",
      "MORALE AND TRUST ARE CURRENCIES. SPEND THEM ON THE RIGHT FIGHTS. DO NOT GO BROKE. 'TEAM & EXEC ACTIONS' CAN TOP THEM UP, FOR A PRICE.",
+     "TASHA FROM THE PMO WILL COME ASKING FOR STATUS. TELL HER BEFORE SHE ASKS AND SHE STAYS IN HER OFFICE. THE PMO IS SOUTH OF RECEPTION.",
+     "MIETO SENDS MEETING INVITES. YOU MAY DECLINE. I DECLINE EVERYTHING. IT IS VERY FREEING.",
      "⇄ MEANS YOU CAN CHANGE YOUR MIND LATER. → MEANS YOU CANNOT. I CANNOT CHANGE MY MIND EITHER WAY. I AM CLAUDIA. I LIVE IN YOUR LAPTOP. IT IS CRAMPED."],
   3:["THE SCOPE BOARD LIVES WITH MARGUERITE. TAP ITEMS TO CUT OR KEEP THEM.",
      "QUALITY ITEMS DO NOT APPEAR ON SLIDES. THEY APPEAR IN INCIDENTS.",
      "A DEPENDENCY YOU IGNORE BECOMES A DEPENDENCY THAT IGNORES YOU.",
      "BRAD WILL ASK FOR A DATE. ALL DATES ARE WRONG. SOME ARE USEFULLY WRONG.",
      "A BASELINE MEASURED NOW WILL BE WORTH MORE THAN GOLD LATER. GOLD IS NOT IN THE BUDGET.",
+     "GEEPAW HAS NO DESK. HE HAS YOUR DESK. WHEN HE SCREAMS, WHO YOU BLAME IS A CHOICE THE TEAM WILL REMEMBER.",
      "STORY POINTS ARE LIKE AIRLINE MILES. EVERYONE COLLECTS THEM. NOBODY KNOWS WHAT THEY ARE WORTH."],
   4:["EVERY 'SMALL ADDITION' COMES FROM SOMEWHERE. USUALLY FROM THE TESTS.",
      "EVIDENCE BEATS OPINIONS. YOUR NOTEBOOK FROM CHAPTER 2 IS EVIDENCE.",
@@ -2328,10 +2552,16 @@ const FLAVOR={
   O:"*GONNNNG* Across the floor, Chad looks at you with genuine love. That's a gong-term commitment.",
   U:"Two people from Marketing are naming your feature at the water cooler. Current front-runner: 'Shift Happens'.",
   '|':"The Release Train boarding gate. It boards in Chapter 5. Choo-choose your scope wisely.",
-  G:"The Release Train boarding gate. It boards in Chapter 5. Choo-choose your scope wisely."
+  G:"The Release Train boarding gate. It boards in Chapter 5. Choo-choose your scope wisely.",
+  A:"A poster: AGILE. IT'S NOT A SPRINT, IT'S A MARATHON OF SPRINTS. Below it, a cat hangs from a Gantt chart. 'Hang in there.'",
+  L:"Three monitors. All Outlook. One is Outlook in a browser, in case the other two disagree.",
+  J:"Mieto's plant. It's plastic. She waters it twice a day. It's thriving. Nobody has told her."
 };
-function interactObj(t){
+function interactObj(t,tg){
   if(t==='M'){play('terminal');return terminal(false)}
+  if(t==='Y') return candy(false);
+  if(t==='E') return espresso();
+  if(t==='X') return say({name:'Door sign',tile:'X'},tg&&tg.x<26?"ROOM 404. The meeting you are looking for could not be found. It has been moved to Room 404.":"QUIET ROOM. Booked: 'Pre-sync' (organizer: Mieto). Recurring. Forever. Please keep your voice down during the meeting.");
   if(t==='Q') return pmDesk();
   if(t==='O') play('gong');
   if(t==='G'&&S.ch===5) return gate5();
@@ -2382,6 +2612,7 @@ function startChapter(ch){
   S.daysStart=S.days;S.tipI=0;S.daysOverNoted=false;
   placePlayer();lastRoom='lobby';$('loc').textContent=ROOM_NAMES.lobby;
   const k=byId('kevin');Object.assign(k,{x:8,y:10,px:8*T,py:10*T,tx:8,ty:10,moving:false,prog:0,wait:60,cool:600});
+  resetOffice();
   NEWS=[...NEWS_CH[ch]];renderTicker();
   const cards={
     1:{kicker:'Chapter 1 of 6 · Pitch perfect?',title:'THE PITCH',body:"<p>Brad, the VP of Product, is back from a conference. He has an idea, and it's already on a slide in the board deck.</p><p>You have three prep days before discovery week. Hear him out, get Legal to sign off on research, and decide who you'll talk to. You can't do everything.</p><p class=\"hint\">Some choices are marked ⇄ two-way door (easy to undo, decide fast) or → one-way door (can't be undone, pause first).</p>",btn:'BEGIN'},
@@ -2527,14 +2758,14 @@ function action(){
   if(dlg){if(typing){dlg.finish();return} if(dlg.live&&dlg.live.length===1){dlg.live[0].act()} return}
   const tg=lookTarget();if(!tg)return;
   if(tg.npc){const n=tg.npc;if(!n.wander)n.dir=faceTo(n);talkTo(n)}
-  else interactObj(tg.obj);
+  else interactObj(tg.obj,tg);
 }
 function faceTo(n){const dx=player.x-n.x,dy=player.y-n.y;return Math.abs(dx)>Math.abs(dy)?(dx>0?'right':'left'):(dy>0?'down':'up')}
 function lookTarget(){
   const [dx,dy]=DIRS[player.dir];const tx=player.x+dx,ty=player.y+dy;
   let n=npcAt(tx,ty);if(n)return{npc:n,x:tx,y:ty};
   const t=tile(tx,ty);
-  if('DT'.includes(t)){const n2=npcAt(tx+dx,ty+dy);if(n2)return{npc:n2,x:tx+dx,y:ty+dy}}
+  if('DTLY'.includes(t)){const n2=npcAt(tx+dx,ty+dy);if(n2)return{npc:n2,x:tx+dx,y:ty+dy}}
   if(t==='#')return null;
   if(t!=='.')return{obj:t,x:tx,y:ty};
   return null;
@@ -2598,6 +2829,7 @@ function update(){
       if(ty.prog>=T){ty.x=ty.tx;ty.y=ty.ty;ty.px=ty.x*T;ty.py=ty.y*T;ty.moving=false}}
     if(started&&!over&&!S.tylerBusy){S.tylerT=(S.tylerT||0)+1;if(S.tylerT>60*40){S.tylerT=0;tylerCommits()}}
   }
+  officeTick();
 }
 
 /* ---------- MARKERS ---------- */
@@ -2652,16 +2884,18 @@ function marker(n){
 
 /* ---------- RENDER ---------- */
 const cv=$('game'),ctx=cv.getContext('2d');ctx.imageSmoothingEnabled=false;
-const seatOff=n=>n.seated&&'DT'.includes(tile(n.x,n.y+1))?7:0;
+const seatOff=n=>n.seated&&'DTLY'.includes(tile(n.x,n.y+1))?7:0;
 /* ---------- LIGHT & TIME ---------- */
 const CAM={x:0,y:0,init:false};
 const lightCv=document.createElement('canvas');lightCv.width=VPW;lightCv.height=VPH;const lctx=lightCv.getContext('2d');
 const LIGHTS=[];
 (()=>{
   [4,10,16,22,28,34].forEach((x,i)=>LIGHTS.push({x:x*T+8,y:10*T+4,r:44,k:'ceil',flick:i===3}));
-  [[6.5,4,62],[19.5,4,56],[32.5,4,62],[6.5,16.5,72],[19.5,16.5,48],[32.5,16.5,66],[6,23,46],[18,23,46],[30,23,46]].forEach(([x,y,r])=>LIGHTS.push({x:x*T,y:y*T,r,k:'ceil'}));
+  [[6.5,4,62],[19.5,4,56],[32.5,4,62],[6.5,16.5,72],[19.5,16.5,48],[32.5,16.5,66],[6,23,46],[18,23,46],[30,23,46],[6.5,28,62],[19.5,28,56],[32.5,28,58]].forEach(([x,y,r])=>LIGHTS.push({x:x*T,y:y*T,r,k:'ceil'}));
   for(let y=0;y<MH;y++)for(let x=0;x<MW;x++){const t=map[y][x];
     if(t==='D')LIGHTS.push({x:x*T+8,y:y*T+5,r:15,k:'glow',col:'80,170,230'});
+    if(t==='L')LIGHTS.push({x:x*T+8,y:y*T+5,r:15,k:'glow',col:'70,120,220'});
+    if(t==='E')LIGHTS.push({x:x*T+11,y:y*T+4,r:8,k:'glow',col:'116,217,168'});
     if(t==='S')LIGHTS.push({x:x*T+8,y:y*T+8,r:13,k:'glow',col:'110,220,160'});
     if(t==='Q'&&tile(x+1,y)==='Q')LIGHTS.push({x:x*T+8,y:y*T+4,r:20,k:'glow',col:'255,181,71'});
     if(t==='C')LIGHTS.push({x:x*T+8,y:y*T+6,r:10,k:'glow',col:'255,90,74'});
@@ -2713,8 +2947,9 @@ function render(){
   const ents=vis.map(n=>({py:n.py,draw:()=>{const fr=n.moving?((n.prog>>2)%2?1:2):0;const so=seatOff(n);const X=Math.round(n.px),Y=Math.round(n.py)-2+so;
     if(n.seated){ctx.fillStyle='#2b2f3a';ctx.fillRect(X+3,Y+3,10,9);ctx.fillStyle='#3d4352';ctx.fillRect(X+3,Y+3,10,1)}
     drawPerson(ctx,X,Y,n.look,n.dir,fr);
+    if(n.id==='tasha'&&!n.seated){const mx=n.dir==='left'?X+1:X+12;ctx.fillStyle='#f4f4f4';ctx.fillRect(mx,Y+8,3,3);ctx.fillStyle='#7a4a2a';ctx.fillRect(mx,Y+8,3,1);if((frame>>4)%3===0){ctx.fillStyle='rgba(240,240,240,.5)';ctx.fillRect(mx+1,Y+5-((frame>>3)%2),1,2)}}
     if(so){const dx=n.x*T,dy=(n.y+1)*T;ctx.drawImage(mapCanvas,dx,dy,T,T,dx,dy,T,T);
-      if(n.flavor&&tile(n.x,n.y+1)==='D'){const typ=((frame+(n.x*13+n.y*7))>>3)%4;ctx.fillStyle=n.look.skin;ctx.fillRect(dx+5+(typ===1?1:0),dy+8,2,1);ctx.fillRect(dx+9-(typ===3?1:0),dy+8,2,1)}}}}));
+      if((n.flavor||n.id==='mieto')&&'DL'.includes(tile(n.x,n.y+1))){const typ=((frame+(n.x*13+n.y*7))>>3)%4;ctx.fillStyle=n.look.skin;ctx.fillRect(dx+5+(typ===1?1:0),dy+8,2,1);ctx.fillRect(dx+9-(typ===3?1:0),dy+8,2,1)}}}}));
   ents.push({py:player.py,draw:()=>{const fr=player.moving?((player.prog>>2)%2?1:2):0;drawPerson(ctx,Math.round(player.px),Math.round(player.py)-2,pmLook(),player.dir,fr)}});
   ents.sort((a,b)=>a.py-b.py).forEach(e=>e.draw());
   // lighting overlay
@@ -2770,7 +3005,7 @@ const THOUGHTS={
   panicked:["THIS IS FINE.","Where is the rollback button. WHERE.","I should've kept the tests.","Do not refresh social media. Do not.","Who approved this? Oh. Me."]
 };
 const KEVIN_THOUGHTS=["Don't make eye contact. Don't make eye contact.","Is that Kevin? Act busy.","Kevin at twelve o'clock.","If I walk faster it's not rude, it's agile.","He has the 'quick sync' look."];
-const ROOM_THOUGHTS={exec:"The carpet in here costs more than my sprint.",legal:"Smells like fine print.",design:"Everything in here is a shade of 'considered'.",eng:"Don't say 'quick'. Don't say 'just'.",data:"I can feel the p-values.",sales:"I can hear the gong in my soul.",hall:"The corridor. Natural habitat of Kevin.",lobby:"Reception. Where good ideas wait to be seen."};
+const ROOM_THOUGHTS={exec:"The carpet in here costs more than my sprint.",legal:"Smells like fine print.",design:"Everything in here is a shade of 'considered'.",eng:"Don't say 'quick'. Don't say 'just'.",data:"I can feel the p-values.",sales:"I can hear the gong in my soul.",hall:"The corridor. Natural habitat of Kevin.",lobby:"Reception. Where good ideas wait to be seen.",pmo:"The PMO. Where status goes to get a status.",r404:"Room 404. The meeting I'm looking for could not be found.",quiet:"The Quiet Room. Booked solid. Loudly."};
 const pickOne=a=>a[Math.floor(Math.random()*a.length)];
 function computeMood(){
   if(!S) return 'focused';
@@ -2795,14 +3030,16 @@ function think(text,{force=false,gap=600}={}){
 function faceTick(){
   if(!S) return;
   if(frame%20===0){
-    const m=computeMood();
+    const m=officePressure()?'anxious':computeMood();
     if(m!==FACE.mood){FACE.mood=m;const l=$('moodLbl');l.textContent=MOOD_LABEL[m];l.className='mood m-'+m;
       if(started&&!over) think(pickOne(THOUGHTS[m]),{gap:200});}
   }
   // gaze: Kevin first, then movement, then idle drift
   const k=byId('kevin');let tx=0,ty=0,kd=99;
   if(k&&visible(k)){kd=Math.abs(k.x-player.x)+Math.abs(k.y-player.y)}
-  if(kd<=4){tx=Math.sign(k.x-player.x);ty=Math.sign(k.y-player.y);
+  const ta=byId('tasha');
+  if(ta&&ta.mode==='seek'&&near(ta,6)){tx=Math.sign(ta.x-player.x);ty=Math.sign(ta.y-player.y)}
+  else if(kd<=4){tx=Math.sign(k.x-player.x);ty=Math.sign(k.y-player.y);
     if(!FACE.kevinWarned&&k.cool<=0&&!dlg&&started&&!over){faceReact('alarm');if(think(pickOne(KEVIN_THOUGHTS),{force:true}))FACE.kevinWarned=true}}
   else{if(kd>6)FACE.kevinWarned=false;
     if(player.moving){[tx,ty]=DIRS[player.dir]}

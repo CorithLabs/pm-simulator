@@ -29,6 +29,9 @@ Along the way:
 - **One-way and two-way doors.** Reversible choices are quick. Irreversible ones ask you to confirm.
 - **Your PM has a face** that reacts to how things are going, and thoughts you'll recognise.
 - **Your desk in the Engineering Pit** has Claudia, an AI assistant, plus Jira and the Release Train dashboard.
+- **The PMO, south of Reception.** Tasha, Director of Delivery Excellence, leaves her office every few minutes to ask whether the work is done, and whether your sprint is agile. Give her a status update before she asks and she stays put. Her coffee and candy are excellent, and both are traps.
+- **Mieto**, Tasha's coordinator, sends you meeting invites ("Pre-sync to align on the sync", "Retro on the retro") and asks whether the hot repo should go in the fridge. Explain things patiently and she ends up on your side.
+- **GeePaw, Assistant to the Customer**, has no desk, so he uses yours. He appears out of nowhere screaming for a status. Blame the developers and morale drops; shield the team and morale rises at the cost of your sanity.
 - Several endings, a performance review, and eight lessons worth keeping.
 
 ## Screenshots
