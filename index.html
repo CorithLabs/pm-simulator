@@ -192,8 +192,9 @@ canvas#game{display:block;width:100%;height:100%;image-rendering:pixelated;image
 .dpad [data-d="right"]{grid-column:3;grid-row:2}.dpad [data-d="down"]{grid-column:2;grid-row:3}
 .abtn{width:84px;height:84px;border-radius:50%;border-color:var(--amber);color:var(--amber);font-size:13px}
 @media (pointer:coarse),(max-width:700px){.pad{display:flex}.hint.keys{display:none}
+  .ticker{order:1}.pad{order:2;flex:0 0 auto;padding-bottom:8px}
   .stage .over{position:fixed;z-index:50}
-  .dlg{bottom:calc(8px - var(--padh));min-height:calc(var(--padh) - 10px);max-height:calc(100% + var(--padh) - 16px)}
+  .dlg{bottom:calc(0px - var(--padh));width:100%;min-height:var(--padh);max-height:calc(100% + var(--padh))}
   .stat b{letter-spacing:.02em}}
 @media (max-width:640px){.portrait{width:56px;height:56px}.hud{grid-template-columns:auto repeat(3,minmax(0,1fr))}.face{grid-row:span 2}.face{flex-direction:column;justify-content:center;gap:3px;padding:4px}.face canvas{width:48px;height:48px}.thought{font-size:15px;max-width:calc(100% - 196px)}.tog{padding:3px 5px;font-size:9px}.dlg{padding:10px;gap:8px}.portrait{width:48px;height:48px}.say{font-size:20px}.obj{display:none}}
 @media (prefers-reduced-motion:reduce){.ticker .run span{animation:none;position:static;display:block;padding:4px 0}}
@@ -532,7 +533,10 @@ function layout(){
   const availH=Math.max(140,WH-padY-used-6);
   let sw,sh;
   if(padOn){
-    sw=Math.floor(Math.min(availW,availH*320/208));sh=Math.floor(sw*208/320);applyView(320,208);
+    // Touch: the map takes all the height left over, zoomed in so people are big enough to read.
+    let scale=Math.max(1.5,Math.min(3.2,availW/(13*T)));
+    let vw=Math.min(MW*T,availW/scale),vh=Math.min(MH*T,availH/scale);
+    sw=availW;sh=Math.floor(vh*scale);applyView(vw,vh);
   } else {
     // Desktop: fill the whole area, showing more of the office on bigger screens.
     let tilesH=Math.max(13,Math.min(MH,availH/(T*3.4)));
@@ -549,7 +553,7 @@ function layout(){
   const ch=padOn?WH:sh;
   document.documentElement.style.setProperty('--cfs',Math.max(.72,Math.min(1.45,ch/(padOn?860:640))).toFixed(3));
   document.documentElement.style.setProperty('--hs',(padOn?1:Math.max(1.2,Math.min(1.6,Math.min(availW/1000,ui)))).toFixed(3));
-  stage.style.setProperty('--padh',(padOn?pad.offsetHeight+8:0)+'px');
+  stage.style.setProperty('--padh',(padOn?Math.max(0,Math.round(pad.getBoundingClientRect().bottom-stage.getBoundingClientRect().bottom)):0)+'px');
 }
 let layoutT;const relayout=()=>{clearTimeout(layoutT);layoutT=setTimeout(layout,60)};
 addEventListener('resize',relayout);if(window.visualViewport)visualViewport.addEventListener('resize',relayout);
@@ -2373,7 +2377,7 @@ function geepawTick(){
   const atDesk=player.x<=4&&player.y>=13&&player.y<=15&&!player.moving;
   if(!atDesk||S.gpT<(S.gpNext||60*60)||incidentLive())return;
   if(S.gpCh!==S.ch){S.gpCh=S.ch;S.gpN=0}
-  if(S.gpN>=2)return;
+  if(S.gpN>=1)return;
   const sp=[[0,1],[1,0],[-1,0],[0,-1]].map(([a,b])=>[player.x+a,player.y+b]).find(([a,b])=>tile(a,b)==='.'&&!npcAt(a,b));
   if(!sp)return;
   S.gpT=0;S.gpNext=60*(150+Math.random()*90);S.gpN++;
